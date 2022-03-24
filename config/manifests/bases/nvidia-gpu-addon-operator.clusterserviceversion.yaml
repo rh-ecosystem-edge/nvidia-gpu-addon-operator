@@ -1,0 +1,54 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: nvidia-gpu-addon-operator.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: GPUAddon is the Schema for the gpuaddons API
+      displayName: GPUAddon
+      kind: GPUAddon
+      name: gpuaddons.nvidia.addons.rh-ecosystem-edge.io
+      version: v1alpha1
+  description: A managed redhat ocm addon for deploying nVidia gpu-operator with ease
+  displayName: redhat-nvidia-gpu-addon
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - gpu
+  - nvidia
+  - redhat
+  - addon
+  - osd
+  links:
+  - name: Nvidia Gpu Addon Operator
+    url: https://nvidia-gpu-addon-operator.domain
+  maintainers:
+  - email: openshift-nvidia@redhat.com
+    name: Redhat ecosystem nvidia team
+  - email: sdayan@redhat.com
+    name: Sagi Dayan
+  maturity: alpha
+  provider:
+    name: RedHat
+    url: https://redhat.com
+  version: 0.0.1

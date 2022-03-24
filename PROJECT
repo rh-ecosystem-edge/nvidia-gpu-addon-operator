@@ -1,0 +1,23 @@
+domain: addons.rh-ecosystem-edge.io
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: nvidia-gpu-addon-operator
+repo: github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: addons.rh-ecosystem-edge.io
+  group: nvidia
+  kind: GPUAddon
+  path: github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1
+  version: v1alpha1
+- controller: true
+  domain: addons.rh-ecosystem-edge.io
+  kind: ConfigMap
+  version: v1
+version: "3"

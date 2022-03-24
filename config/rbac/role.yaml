@@ -1,0 +1,84 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: manager-role
+  namespace: redhat-nvidia-gpu-addon
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nfd.openshift.io
+  resources:
+  - nodefeaturediscoveries
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nvidia.addons.rh-ecosystem-edge.io
+  resources:
+  - gpuaddons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nvidia.addons.rh-ecosystem-edge.io
+  resources:
+  - gpuaddons/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - nvidia.addons.rh-ecosystem-edge.io
+  resources:
+  - gpuaddons/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nvidia.com/v1
+  resources:
+  - clusterpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

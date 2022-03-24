@@ -1,0 +1,8 @@
+apiVersion: nvidia.addons.rh-ecosystem-edge.io/v1alpha1
+kind: GPUAddon
+metadata:
+  namespace: redhat-nvidia-gpu-addon
+  name: gpuaddon-config-sample
+spec:
+  console_plugin_enabled: true
+  # TODO(user): Add fields here
