@@ -41,10 +41,11 @@ type GPUAddonStatus struct {
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
-// +kubebuilder:validation:Enum=Idle;Installing;Ready;Updating;Uninstalling
+// +kubebuilder:validation:Enum=Failed;Idle;Installing;Ready;Updating;Uninstalling
 type GPUAddonState string
 
 const (
+	GPUAddonStateFailed       GPUAddonState = "Failed"
 	GPUAddonStateIdle         GPUAddonState = "Idle"
 	GPUAddonStateInstalling   GPUAddonState = "Installing"
 	GPUAddonStateReady        GPUAddonState = "Ready"

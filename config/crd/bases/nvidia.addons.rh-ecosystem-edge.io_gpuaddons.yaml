@@ -129,6 +129,7 @@ spec:
               phase:
                 description: The state of the addon operator
                 enum:
+                - Failed
                 - Idle
                 - Installing
                 - Ready
