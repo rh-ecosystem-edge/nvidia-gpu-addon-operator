@@ -13,8 +13,8 @@ type config struct {
 	GpuCsvPrefix      string `envconfig:"GPU_CSV_PREFIX" default:"gpu-operator-certified"`
 	GpuCsvNamespace   string `envconfig:"GPU_CSV_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
 	AddonNamespace    string `envconfig:"ADDON_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
-	AddonID           string `envconfig:"ADDON_ID" default:"nvidia-gpu-addon"`
-	AddonLabel        string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-gpu-operator-certified-addon"`
+	AddonID           string `envconfig:"ADDON_ID" default:"redhat-nvidia-gpu-addon"`
+	AddonLabel        string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-operator"`
 	ClusterPolicyName string `envconfig:"CLUSTER_POLICY_NAME" default:"ocp-gpu-addon"`
 	NfdCrName         string `envconfig:"NFD_CR_NAME" default:"ocp-gpu-addon"`
 }
