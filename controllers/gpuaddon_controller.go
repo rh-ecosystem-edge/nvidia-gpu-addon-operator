@@ -24,8 +24,6 @@ import (
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	"github.com/pkg/errors"
-	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
-	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +31,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 )
 
 // GPUAddonReconciler reconciles a GPUAddon object
