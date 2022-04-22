@@ -43,9 +43,9 @@ type ConfigMapReconciler struct {
 
 var AddonDeleteLabel string = fmt.Sprintf("%v-delete", common.GlobalConfig.AddonLabel)
 
-//+kubebuilder:rbac:groups="",namespace=redhat-nvidia-gpu-addon,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups="",namespace=redhat-nvidia-gpu-addon,resources=configmaps/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups="",namespace=redhat-nvidia-gpu-addon,resources=configmaps/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",namespace=system,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",namespace=system,resources=configmaps/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups="",namespace=system,resources=configmaps/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
