@@ -6,7 +6,9 @@ import (
 	"time"
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
+	configv1 "github.com/openshift/api/config/v1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
+	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
 	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
@@ -189,10 +191,28 @@ func newTestGPUAddonReconciler(objs ...runtime.Object) *GPUAddonReconciler {
 	s := scheme.Scheme
 
 	Expect(operatorsv1alpha1.AddToScheme(s)).ShouldNot(HaveOccurred())
+	Expect(operatorsv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(v1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(addonv1alpha1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(gpuv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(nfdv1.AddToScheme(s)).ShouldNot(HaveOccurred())
+	Expect(configv1.AddToScheme(s)).ShouldNot(HaveOccurred())
+
+	clusterVersion := &configv1.ClusterVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "version",
+		},
+		Status: configv1.ClusterVersionStatus{
+			History: []configv1.UpdateHistory{
+				{
+					State:   configv1.CompletedUpdate,
+					Version: "4.9.7",
+				},
+			},
+		},
+	}
+
+	objs = append(objs, clusterVersion)
 
 	c := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).Build()
 
