@@ -48,11 +48,11 @@ var resouceOrderedReconcilers = &[]ResourceReconciler{
 	&ConsolePluginResourcesReconciler{},
 }
 
-//+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=redhat-nvidia-gpu-addon,resources=gpuaddons,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=redhat-nvidia-gpu-addon,resources=gpuaddons/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=redhat-nvidia-gpu-addon,resources=gpuaddons/finalizers,verbs=update
-//+kubebuilder:rbac:groups=nvidia.com/v1,namespace=redhat-nvidia-gpu-addon,resources=clusterpolicies,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=nfd.openshift.io,namespace=redhat-nvidia-gpu-addon,resources=nodefeaturediscoveries,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=system,resources=gpuaddons,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=system,resources=gpuaddons/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=system,resources=gpuaddons/finalizers,verbs=update
+//+kubebuilder:rbac:groups=nvidia.com,resources=clusterpolicies,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=nfd.openshift.io,namespace=system,resources=nodefeaturediscoveries,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
