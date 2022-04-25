@@ -36,21 +36,21 @@ type GPUAddonSpec struct {
 // GPUAddonStatus defines the observed state of GPUAddon
 type GPUAddonStatus struct {
 	// The state of the addon operator
-	Phase GPUAddonState `json:"phase"`
+	Phase GPUAddonPhase `json:"phase"`
 	// Conditions represent the latest available observations of an object's state
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
 // +kubebuilder:validation:Enum=Failed;Idle;Installing;Ready;Updating;Uninstalling
-type GPUAddonState string
+type GPUAddonPhase string
 
 const (
-	GPUAddonStateFailed       GPUAddonState = "Failed"
-	GPUAddonStateIdle         GPUAddonState = "Idle"
-	GPUAddonStateInstalling   GPUAddonState = "Installing"
-	GPUAddonStateReady        GPUAddonState = "Ready"
-	GPUAddonStateUpdating     GPUAddonState = "Updating"
-	GPUAddonStateUninstalling GPUAddonState = "Uninstalling"
+	GPUAddonPhaseFailed       GPUAddonPhase = "Failed"
+	GPUAddonPhaseIdle         GPUAddonPhase = "Idle"
+	GPUAddonPhaseInstalling   GPUAddonPhase = "Installing"
+	GPUAddonPhaseReady        GPUAddonPhase = "Ready"
+	GPUAddonPhaseUpdating     GPUAddonPhase = "Updating"
+	GPUAddonPhaseUninstalling GPUAddonPhase = "Uninstalling"
 )
 
 //+kubebuilder:object:root=true

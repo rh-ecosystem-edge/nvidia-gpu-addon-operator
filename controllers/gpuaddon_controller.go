@@ -122,19 +122,19 @@ func (r *GPUAddonReconciler) patchStatus(ctx context.Context, gpuAddon addonv1al
 	patch := client.MergeFrom(gpuAddon.DeepCopy())
 	gpuAddon.Status.Conditions = conditions
 	if err != nil {
-		gpuAddon.Status.Phase = addonv1alpha1.GPUAddonStateFailed
+		gpuAddon.Status.Phase = addonv1alpha1.GPUAddonPhaseFailed
 	} else {
 		for _, condition := range conditions {
-			gpuAddon.Status.Phase = addonv1alpha1.GPUAddonStateReady
+			gpuAddon.Status.Phase = addonv1alpha1.GPUAddonPhaseReady
 			if condition.Status == metav1.ConditionFalse {
-				gpuAddon.Status.Phase = addonv1alpha1.GPUAddonStateInstalling
+				gpuAddon.Status.Phase = addonv1alpha1.GPUAddonPhaseInstalling
 				break
 			}
 		}
 		// Not relevant now - But later with updates
 		for _, condition := range conditions {
 			if strings.HasSuffix("Update", condition.Type) {
-				gpuAddon.Status.Phase = addonv1alpha1.GPUAddonStateUpdating
+				gpuAddon.Status.Phase = addonv1alpha1.GPUAddonPhaseUpdating
 				break
 			}
 		}
