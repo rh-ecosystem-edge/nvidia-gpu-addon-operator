@@ -53,6 +53,7 @@ var resouceOrderedReconcilers = &[]ResourceReconciler{
 //+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=system,resources=gpuaddons/finalizers,verbs=update
 //+kubebuilder:rbac:groups=nvidia.com,resources=clusterpolicies,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nfd.openshift.io,namespace=system,resources=nodefeaturediscoveries,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=clusterserviceversions,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
