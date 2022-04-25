@@ -21,18 +21,20 @@ import (
 	"fmt"
 	"strings"
 
-	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/pkg/errors"
-	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
-	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 )
 
 // GPUAddonReconciler reconciles a GPUAddon object
@@ -44,6 +46,7 @@ type GPUAddonReconciler struct {
 // List of other resources managed by this operator.
 var resouceOrderedReconcilers = &[]ResourceReconciler{
 	&NFDResourceReconciler{},
+	&SubscriptionResourceReconciler{},
 	&ClusterPolicyResourceReconciler{},
 	&ConsolePluginResourcesReconciler{},
 }
@@ -54,6 +57,8 @@ var resouceOrderedReconcilers = &[]ResourceReconciler{
 //+kubebuilder:rbac:groups=nvidia.com,resources=clusterpolicies,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nfd.openshift.io,namespace=system,resources=nodefeaturediscoveries,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=clusterserviceversions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -103,6 +108,7 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		conditions, err := rr.Reconcile(ctx, r.Client, &gpuAddon)
 		addonConditions = append(addonConditions, conditions...)
 		if err != nil {
+			logger.Error(err, "Reconcilation failed", "resource", gpuAddon.Name, "namespace", gpuAddon.Namespace)
 			return ctrl.Result{}, r.patchStatus(ctx, gpuAddon, addonConditions, err)
 		}
 	}
@@ -111,12 +117,12 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *GPUAddonReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *GPUAddonReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&addonv1alpha1.GPUAddon{}).
-		Owns(&gpuv1.ClusterPolicy{}).
+		Owns(&operatorsv1alpha1.Subscription{}).
 		Owns(&nfdv1.NodeFeatureDiscovery{}).
-		Complete(r)
+		Build(r)
 }
 
 func (r *GPUAddonReconciler) patchStatus(ctx context.Context, gpuAddon addonv1alpha1.GPUAddon, conditions []metav1.Condition, err error) error {

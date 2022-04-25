@@ -4,22 +4,26 @@ import (
 	"context"
 	"fmt"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
-	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
-	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 )
 
 type NFDResourceReconciler struct{}
 
 var _ ResourceReconciler = &NFDResourceReconciler{}
 
-func (r *NFDResourceReconciler) Reconcile(ctx context.Context, client client.Client, gpuAddon *addonv1alpha1.GPUAddon) ([]metav1.Condition, error) {
+func (r *NFDResourceReconciler) Reconcile(
+	ctx context.Context,
+	client client.Client,
+	gpuAddon *addonv1alpha1.GPUAddon) ([]metav1.Condition, error) {
+
 	logger := log.FromContext(ctx, "Reconcile Step", "NFD CR")
 	conditions := []metav1.Condition{}
 	nfd := &nfdv1.NodeFeatureDiscovery{}

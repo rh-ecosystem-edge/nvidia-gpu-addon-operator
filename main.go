@@ -17,23 +17,35 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	configv1 "github.com/openshift/api/config/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
+	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	nvidiav1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers"
@@ -53,6 +65,8 @@ func init() {
 	utilruntime.Must(gpuv1.AddToScheme(scheme))
 	utilruntime.Must(nfdv1.AddToScheme(scheme))
 	utilruntime.Must(operatorsv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(operatorsv1.AddToScheme(scheme))
+	utilruntime.Must(configv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -89,13 +103,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.GPUAddonReconciler{
+	gpuAddonController, err := (&controllers.GPUAddonReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr)
+	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GPUAddon")
 		os.Exit(1)
 	}
+
+	go func() {
+		if err := watchForOwnClusterPoliciesWhenAvailable(gpuAddonController); err != nil {
+			setupLog.Error(err, "unable to wait and watch for ClusterPolicy CRD")
+			return
+		}
+	}()
+
 	if err = (&controllers.ConfigMapReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -121,4 +144,42 @@ func main() {
 	}
 
 	setupLog.Info(fmt.Sprintf("GPUAddon Operator running with config: %+v", common.GlobalConfig))
+}
+
+func watchForOwnClusterPoliciesWhenAvailable(c controller.Controller) error {
+	if err := wait.PollInfinite(time.Second, isClusterPolicyAvailable()); err != nil {
+		return fmt.Errorf("unable to wait for ClusterPolicy CRD: %w", err)
+	}
+
+	err := c.Watch(
+		&source.Kind{Type: &gpuv1.ClusterPolicy{}},
+		&handler.EnqueueRequestForOwner{
+			OwnerType:    &nvidiav1alpha1.GPUAddon{},
+			IsController: true,
+		})
+
+	if err != nil {
+		return fmt.Errorf("unable to watch for owned ClusterPolicy CRs: %w", err)
+	}
+
+	return nil
+}
+
+func isClusterPolicyAvailable() wait.ConditionFunc {
+	return func() (bool, error) {
+		client, err := client.New(ctrlconfig.GetConfigOrDie(), client.Options{Scheme: scheme})
+		if err != nil {
+			return false, err
+		}
+
+		clusterPolicyList := &gpuv1.ClusterPolicyList{}
+
+		err = client.List(context.TODO(), clusterPolicyList)
+		unavailable := meta.IsNoMatchError(err)
+		if err != nil && !unavailable {
+			return false, err
+		}
+
+		return !unavailable, nil
+	}
 }
