@@ -128,7 +128,7 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 func (r *SubscriptionResourceReconciler) getDeployedConditionFetchFailed() metav1.Condition {
 	return common.NewCondition(
 		SubscriptionDeployedCondition,
-		"False",
+		metav1.ConditionFalse,
 		"FetchCrFailed",
 		"Failed to fetch Subscription CR")
 }
@@ -136,7 +136,7 @@ func (r *SubscriptionResourceReconciler) getDeployedConditionFetchFailed() metav
 func (r *SubscriptionResourceReconciler) getDeployedConditionCreateFailed() metav1.Condition {
 	return common.NewCondition(
 		SubscriptionDeployedCondition,
-		"False",
+		metav1.ConditionFalse,
 		"CreateCrFailed",
 		"Failed to create Subscription CR")
 }
@@ -144,7 +144,7 @@ func (r *SubscriptionResourceReconciler) getDeployedConditionCreateFailed() meta
 func (r *SubscriptionResourceReconciler) getDeployedConditionCreateSuccess() metav1.Condition {
 	return common.NewCondition(
 		SubscriptionDeployedCondition,
-		"False",
+		metav1.ConditionTrue,
 		"CreateCrSuccess",
 		"Subscription deployed successfully")
 }
