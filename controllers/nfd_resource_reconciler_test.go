@@ -22,6 +22,7 @@ import (
 	configv1 "github.com/openshift/api/config/v1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -81,6 +82,39 @@ var _ = Describe("NFD Resource Reconcile", Ordered, func() {
 				Name:      common.GlobalConfig.NfdCrName,
 			}, &nfd)
 			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Context("Delete", func() {
+		common.ProcessConfig()
+		rrec := &NFDResourceReconciler{}
+
+		nfd := &nfdv1.NodeFeatureDiscovery{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      common.GlobalConfig.NfdCrName,
+				Namespace: common.GlobalConfig.AddonNamespace,
+			},
+		}
+
+		scheme := scheme.Scheme
+		Expect(nfdv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+
+		It("should delete the NodeFeatureDiscovery", func() {
+			c := fake.
+				NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(nfd).
+				Build()
+
+			err := rrec.Delete(context.TODO(), c)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = c.Get(context.TODO(), types.NamespacedName{
+				Name:      nfd.Name,
+				Namespace: nfd.Namespace,
+			}, nfd)
+			Expect(err).Should(HaveOccurred())
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 	})
 })

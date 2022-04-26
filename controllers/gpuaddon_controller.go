@@ -44,11 +44,11 @@ type GPUAddonReconciler struct {
 }
 
 // List of other resources managed by this operator.
-var resouceOrderedReconcilers = &[]ResourceReconciler{
+var resourceOrderedReconcilers = []ResourceReconciler{
 	&NFDResourceReconciler{},
 	&SubscriptionResourceReconciler{},
 	&ClusterPolicyResourceReconciler{},
-	&ConsolePluginResourcesReconciler{},
+	&ConsolePluginResourceReconciler{},
 }
 
 //+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=system,resources=gpuaddons,verbs=get;list;watch;create;update;patch;delete
@@ -56,7 +56,7 @@ var resouceOrderedReconcilers = &[]ResourceReconciler{
 //+kubebuilder:rbac:groups=nvidia.addons.rh-ecosystem-edge.io,namespace=system,resources=gpuaddons/finalizers,verbs=update
 //+kubebuilder:rbac:groups=nvidia.com,resources=clusterpolicies,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nfd.openshift.io,namespace=system,resources=nodefeaturediscoveries,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=clusterserviceversions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=clusterserviceversions,verbs=get;list;watch;delete
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
 
@@ -87,13 +87,13 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		logger.Info(fmt.Sprintf("GPUAddon CR %v/%v marked for deletion", req.Namespace, req.Name))
 		if common.SliceContainsString(gpuAddon.ObjectMeta.Finalizers, common.GlobalConfig.AddonID) {
 
-			err := r.removeSelfCsv(ctx)
+			err := r.removeOwnedResources(ctx)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 
 			gpuAddon.Finalizers = common.SliceRemoveString(gpuAddon.Finalizers, common.GlobalConfig.AddonID)
-			return ctrl.Result{}, errors.Wrap(r.Client.Update(ctx, &gpuAddon), "Failed to remove Finalizer")
+			return ctrl.Result{}, errors.Wrap(r.Client.Update(ctx, &gpuAddon), "failed to remove finalizer")
 		}
 		return ctrl.Result{}, nil
 	}
@@ -104,7 +104,7 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.patchStatus(ctx, gpuAddon, addonConditions, err)
 	}
 
-	for _, rr := range *resouceOrderedReconcilers {
+	for _, rr := range resourceOrderedReconcilers {
 		conditions, err := rr.Reconcile(ctx, r.Client, &gpuAddon)
 		addonConditions = append(addonConditions, conditions...)
 		if err != nil {
@@ -163,23 +163,35 @@ func (r *GPUAddonReconciler) registerFinilizerIfNeeded(ctx context.Context, gpuA
 	return nil
 }
 
+func (r *GPUAddonReconciler) removeOwnedResources(ctx context.Context) error {
+	for i := len(resourceOrderedReconcilers) - 1; i >= 0; i-- {
+		err := resourceOrderedReconcilers[i].Delete(ctx, r.Client)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := r.removeSelfCsv(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *GPUAddonReconciler) removeSelfCsv(ctx context.Context) error {
 	logger := log.FromContext(ctx).WithValues("Reconcile Step", "Addon CSV Deletion")
 	logger.Info("Cleanup Reconcile | Delete own CSV")
 
 	addonCsv, err := common.GetCsvWithPrefix(r.Client, common.GlobalConfig.AddonNamespace, common.GlobalConfig.AddonID)
-
 	if err != nil {
-		logger.Error(err, "Failed to fetch addon CSV")
 		return err
 	}
 
-	// Remove the addon CSV CR - This will indicate OCM Addon operator that we are ready for deletion.
-	err = r.Client.Delete(ctx, addonCsv)
+	err = r.Delete(ctx, addonCsv)
 	if err != nil && !k8serrors.IsNotFound(err) {
-		logger.Error(err, "Failed to delete addon CSV")
-		return err
+		return fmt.Errorf("failed to delete GPUAddon Operator CSV %s: %w", addonCsv.Name, err)
 	}
-	logger.Info("CSV Deleted successfully.")
+
 	return nil
 }

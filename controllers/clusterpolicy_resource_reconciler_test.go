@@ -21,8 +21,10 @@ import (
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -63,6 +65,37 @@ var _ = Describe("ClusterPolicy Resource Reconcile", Ordered, func() {
 				Name: common.GlobalConfig.ClusterPolicyName,
 			}, &cp)
 			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Context("Delete", func() {
+		common.ProcessConfig()
+		rrec := &ClusterPolicyResourceReconciler{}
+
+		cp := &gpuv1.ClusterPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: common.GlobalConfig.ClusterPolicyName,
+			},
+		}
+
+		scheme := scheme.Scheme
+		Expect(gpuv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+
+		It("should delete the ClusterPolicy", func() {
+			c := fake.
+				NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(cp).
+				Build()
+
+			err := rrec.Delete(context.TODO(), c)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = c.Get(context.TODO(), client.ObjectKey{
+				Name: cp.Name,
+			}, cp)
+			Expect(err).Should(HaveOccurred())
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 	})
 })

@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -35,6 +36,9 @@ import (
 
 const (
 	SubscriptionDeployedCondition = "SubscriptionDeployed"
+
+	packageName      = "gpu-operator-certified"
+	subscriptionName = "gpu-operator-certified"
 )
 
 type SubscriptionResourceReconciler struct{}
@@ -64,7 +68,7 @@ func (r *SubscriptionResourceReconciler) Reconcile(
 	s := &operatorsv1alpha1.Subscription{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: gpuAddon.Namespace,
-			Name:      "gpu-operator-certified",
+			Name:      subscriptionName,
 		},
 	}
 
@@ -111,12 +115,38 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 		CatalogSource:          "certified-operators",
 		CatalogSourceNamespace: "openshift-marketplace",
 		Channel:                OpenShiftGPUOperatorCompatibilityMatrix[ocpVersion][lastIndex],
-		Package:                "gpu-operator-certified",
+		Package:                packageName,
 		InstallPlanApproval:    operatorsv1alpha1.ApprovalAutomatic,
 	}
 
 	if err := ctrl.SetControllerReference(gpuAddon, s, client.Scheme()); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *SubscriptionResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+	s := &operatorsv1alpha1.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: common.GlobalConfig.AddonNamespace,
+			Name:      subscriptionName,
+		},
+	}
+
+	err := c.Delete(ctx, s)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete Subscription %s: %w", s.Name, err)
+	}
+
+	csv, err := common.GetCsvWithPrefix(c, common.GlobalConfig.AddonNamespace, packageName)
+	if err != nil {
+		return err
+	}
+
+	err = c.Delete(ctx, csv)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete GPU Operator CSV %s: %w", csv.Name, err)
 	}
 
 	return nil

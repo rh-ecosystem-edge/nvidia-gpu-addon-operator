@@ -22,6 +22,7 @@ import (
 	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -78,6 +79,52 @@ var _ = Describe("Subscription Resource Reconcile", Ordered, func() {
 				Name:      "gpu-operator-certified",
 			}, &s)
 			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Context("Delete", func() {
+		common.ProcessConfig()
+		rrec := &SubscriptionResourceReconciler{}
+
+		s := &operatorsv1alpha1.Subscription{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "gpu-operator-certified",
+				Namespace: common.GlobalConfig.AddonNamespace,
+			},
+		}
+		csv := &operatorsv1alpha1.ClusterServiceVersion{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "gpu-operator-certified.v1.10.1",
+				Namespace: common.GlobalConfig.AddonNamespace,
+			},
+		}
+
+		scheme := scheme.Scheme
+		Expect(operatorsv1alpha1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+
+		It("should delete the Subscription", func() {
+			c := fake.
+				NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(s, csv).
+				Build()
+
+			err := rrec.Delete(context.TODO(), c)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			err = c.Get(context.TODO(), types.NamespacedName{
+				Name:      s.Name,
+				Namespace: s.Namespace,
+			}, s)
+			Expect(err).Should(HaveOccurred())
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+
+			err = c.Get(context.TODO(), types.NamespacedName{
+				Name:      csv.Name,
+				Namespace: csv.Namespace,
+			}, csv)
+			Expect(err).Should(HaveOccurred())
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 	})
 })

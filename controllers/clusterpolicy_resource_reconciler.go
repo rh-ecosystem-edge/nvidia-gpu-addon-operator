@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
 	"github.com/pkg/errors"
@@ -138,6 +139,21 @@ func (r *ClusterPolicyResourceReconciler) setDesiredClusterPolicy(
 	// if err := ctrl.SetControllerReference(gpuAddon, cp, c.Scheme()); err != nil {
 	// 	return err
 	// }
+
+	return nil
+}
+
+func (r *ClusterPolicyResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+	cp := &gpuv1.ClusterPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: common.GlobalConfig.ClusterPolicyName,
+		},
+	}
+
+	err := c.Delete(ctx, cp)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete ClusterPolicy %s: %w", cp.Name, err)
+	}
 
 	return nil
 }

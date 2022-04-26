@@ -110,6 +110,22 @@ func (r *NFDResourceReconciler) setDesiredNFD(
 	return nil
 }
 
+func (r *NFDResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+	nfd := &nfdv1.NodeFeatureDiscovery{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: common.GlobalConfig.AddonNamespace,
+			Name:      common.GlobalConfig.NfdCrName,
+		},
+	}
+
+	err := c.Delete(ctx, nfd)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete NodeFeatureDiscovery %s: %w", nfd.Name, err)
+	}
+
+	return nil
+}
+
 func (r *NFDResourceReconciler) getDeployedConditionFetchFailed() metav1.Condition {
 	return common.NewCondition(
 		NFDDeployedCondition,
