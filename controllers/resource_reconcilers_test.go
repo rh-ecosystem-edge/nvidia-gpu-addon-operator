@@ -151,24 +151,6 @@ var _ = Describe("ResourceReconciler instance tests", func() {
 			runTestCase(test, gpuAddon)
 		}, tests)
 	})
-
-	Context("ClusterPolicyRecourceReconciler tests", func() {
-		tests := []TableEntry{
-			Entry("Error when no CSV in namespace", resourceReconcilerTestConfig{
-				client:        newTestClientWith(),
-				rr:            &ClusterPolicyResourceReconciler{},
-				errorExpected: true,
-				gpuAddon:      gpuAddon,
-				expectedConditionsStates: map[string]metav1.ConditionStatus{
-					"ClusterPolicyDeployed": "False",
-				},
-			}),
-		}
-
-		DescribeTable("Reconcile Flows", func(test resourceReconcilerTestConfig) {
-			runTestCase(test, gpuAddon)
-		}, tests)
-	})
 })
 
 func runTestCase(test resourceReconcilerTestConfig, gpuAddon *addonv1alpha1.GPUAddon) {

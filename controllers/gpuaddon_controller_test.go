@@ -79,13 +79,9 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 			It("Should Create gpu-operator ClusterPolicy CR", func() {
 				clusterPolicyCr := &gpuv1.ClusterPolicy{}
 				err := r.Client.Get(context.TODO(), types.NamespacedName{
-					Name:      common.GlobalConfig.NfdCrName,
-					Namespace: common.GlobalConfig.AddonNamespace,
+					Name: common.GlobalConfig.ClusterPolicyName,
 				}, clusterPolicyCr)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				ownerRef := clusterPolicyCr.ObjectMeta.OwnerReferences[0]
-				Expect(ownerRef.UID).To(Equal(g.UID))
 			})
 			It("Should contain condition", func() {
 				Expect(common.ContainCondition(g.Status.Conditions, "ClusterPolicyDeployed", "True")).To(BeTrue())
