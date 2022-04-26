@@ -3,8 +3,10 @@ package common
 import (
 	"testing"
 
+	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -59,6 +61,37 @@ var _ = Describe("common.go | Common utils", func() {
 			condition := NewCondition("TestCondition", "True", "", "")
 			Expect(condition.LastTransitionTime.IsZero()).To(BeFalse())
 			Expect(condition.Type).To(Equal("TestCondition"))
+		})
+	})
+
+	Context("GetOpenshiftVersion", func() {
+		clusterVersion := &configv1.ClusterVersion{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "version",
+			},
+			Status: configv1.ClusterVersionStatus{
+				History: []configv1.UpdateHistory{
+					{
+						State:   configv1.CompletedUpdate,
+						Version: "4.9.7",
+					},
+				},
+			},
+		}
+
+		scheme := scheme.Scheme
+		Expect(configv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+
+		It("should return the 'major.minor' version of the OpenShift cluster", func() {
+			c := fake.
+				NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(clusterVersion).
+				Build()
+
+			v, err := GetOpenShiftVersion(c)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(v).To(Equal("4.9"))
 		})
 	})
 })

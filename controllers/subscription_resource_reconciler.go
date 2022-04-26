@@ -19,14 +19,11 @@ package controllers
 import (
 	"context"
 	"errors"
-	"fmt"
 
-	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	utilversion "k8s.io/apimachinery/pkg/util/version"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -103,7 +100,7 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 		return errors.New("subscription cannot be nil")
 	}
 
-	ocpVersion, err := r.getOpenShiftVersion(client)
+	ocpVersion, err := common.GetOpenShiftVersion(client)
 	if err != nil {
 		return err
 	}
@@ -147,28 +144,4 @@ func (r *SubscriptionResourceReconciler) getDeployedConditionCreateSuccess() met
 		"False",
 		"CreateCrSuccess",
 		"Subscription deployed successfully")
-}
-
-func (r *SubscriptionResourceReconciler) getOpenShiftVersion(client client.Client) (string, error) {
-	clusterVersion := &configv1.ClusterVersion{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: "version"}, clusterVersion)
-	// v, err := client.ClusterVersions().Get(context.TODO(), "version", metav1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-
-	for _, condition := range clusterVersion.Status.History {
-		if condition.State != "Completed" {
-			continue
-		}
-
-		ocpVersion, err := utilversion.ParseGeneric(condition.Version)
-		if err != nil {
-			return "", err
-		}
-
-		return fmt.Sprintf("%d.%d", ocpVersion.Major(), ocpVersion.Minor()), nil
-	}
-
-	return "", fmt.Errorf("failed to find Completed Cluster Version")
 }
