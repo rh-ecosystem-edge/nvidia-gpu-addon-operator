@@ -3,14 +3,14 @@ package common
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
 	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 func TestCommon(t *testing.T) {
@@ -79,60 +79,6 @@ var _ = Describe("CSV Utils", func() {
 			output, err := GetCsvWithPrefix(c, "test-ns", "test")
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(output.Name).To(Equal(csv.Name))
-		})
-	})
-
-	Context("CSV ALM Examples", func() {
-		It("Happy Flow", func() {
-			csv := operatorsv1alpha1.ClusterServiceVersion{}
-			csv.Namespace = "test-ns"
-			csv.Name = "test-2345433"
-			csv.ObjectMeta.Annotations = map[string]string{
-				"alm-examples": "[{}]",
-			}
-			example, err := GetAlmExamples(&csv)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(example).To(Equal("[{}]"))
-		})
-
-		It("Should return An error with invalid CSV examples", func() {
-			csv := operatorsv1alpha1.ClusterServiceVersion{}
-			csv.Namespace = "test-ns"
-			csv.Name = "test-2345433"
-			_, err := GetAlmExamples(&csv)
-			Expect(err).Should(HaveOccurred())
-		})
-	})
-})
-
-var _ = Describe("CR Utils", func() {
-	Context("Unstructured Object parsing", func() {
-		DescribeTable("Should return error when invalid input",
-			func(almExample string) {
-				logger := ctrl.Log.WithName("Test")
-				_, err := GetCRasUnstructuredObjectFromAlmExample(almExample, logger)
-				Expect(err).Should(HaveOccurred())
-			},
-			Entry("Empty string", ""),
-			Entry("Not a JSON array", "{}"),
-			Entry("Empty JSON array", "[]"),
-		)
-
-		It("Happy Flow", func() {
-			logger := ctrl.Log.WithName("Test")
-			obj, err := GetCRasUnstructuredObjectFromAlmExample(`[
-		{
-          "apiVersion": "v1",
-          "kind": "Namespace",
-          "metadata": {
-            "name": "gpu-addon"
-        	}
-		}
-
-	]`, logger)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(obj.GetName()).To(Equal("gpu-addon"))
-			Expect(obj.GetKind()).To(Equal("Namespace"))
 		})
 	})
 })

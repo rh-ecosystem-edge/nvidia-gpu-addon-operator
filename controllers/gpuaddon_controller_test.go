@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
@@ -142,10 +141,7 @@ func prepareClusterForGPUAddonCreateTest() (*addonv1alpha1.GPUAddon, *GPUAddonRe
 	gpuAddon.UID = types.UID("uid-uid")
 	gpuAddon.Kind = "GPUAddon"
 
-	nfdCsv := common.NewCsv(common.GlobalConfig.NfdCsvNamespace, fmt.Sprintf("%v-test-csv", common.GlobalConfig.NfdCsvPrefix), common.NfdAlmExample)
-	gpuCsv := common.NewCsv(common.GlobalConfig.GpuCsvNamespace, fmt.Sprintf("%v-test-csv", common.GlobalConfig.GpuCsvPrefix), common.ClusterPolicyAlmExample)
-
-	r := newTestGPUAddonReconciler(gpuAddon, nfdCsv, gpuCsv)
+	r := newTestGPUAddonReconciler(gpuAddon)
 
 	return gpuAddon, r
 }
