@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"context"
-	"fmt"
+	"reflect"
 	"time"
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
@@ -14,6 +14,7 @@ import (
 	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/utils/pointer"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,6 +25,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -80,13 +82,9 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 			It("Should Create gpu-operator ClusterPolicy CR", func() {
 				clusterPolicyCr := &gpuv1.ClusterPolicy{}
 				err := r.Client.Get(context.TODO(), types.NamespacedName{
-					Name:      common.GlobalConfig.NfdCrName,
-					Namespace: common.GlobalConfig.AddonNamespace,
+					Name: common.GlobalConfig.ClusterPolicyName,
 				}, clusterPolicyCr)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				ownerRef := clusterPolicyCr.ObjectMeta.OwnerReferences[0]
-				Expect(ownerRef.UID).To(Equal(g.UID))
 			})
 			It("Should contain condition", func() {
 				Expect(common.ContainCondition(g.Status.Conditions, "ClusterPolicyDeployed", "True")).To(BeTrue())
@@ -96,18 +94,21 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 
 	Context("Delete Reconcile", func() {
 		gpuAddon, r := prepareClusterForGPUAddonDeletionTest()
-		It("Should not return an error when reconciling", func() {
-			req := reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: gpuAddon.Namespace,
-					Name:      gpuAddon.Name,
-				},
-			}
 
-			_, err := r.Reconcile(context.TODO(), req)
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Namespace: gpuAddon.Namespace,
+				Name:      gpuAddon.Name,
+			},
+		}
+
+		_, err := r.Reconcile(context.TODO(), req)
+
+		It("should not return an error", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 		})
-		It("Should Delete GPUAddon CSV", func() {
+
+		It("should delete the GPUAddon CSV", func() {
 			g := &operatorsv1alpha1.ClusterServiceVersion{}
 			err := r.Client.Get(context.TODO(), types.NamespacedName{
 				Name:      common.GlobalConfig.AddonID,
@@ -116,15 +117,35 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
-		It("GPU Addon CR should be deleted now.", func() {
-			// At this point the GPUAddon should be deleted.
+
+		It("should already find the GPUAddon CR deleted", func() {
 			err := r.Client.Delete(context.TODO(), gpuAddon)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
-		XIt("Should Delete NFD CR as a result.", func() {
+
+		It("should delete the ClusterPolicy CR", func() {
+			cp := &gpuv1.ClusterPolicy{}
+			err := r.Get(context.TODO(), client.ObjectKey{
+				Name: common.GlobalConfig.ClusterPolicyName,
+			}, cp)
+			Expect(err).Should(HaveOccurred())
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("should delete the Subscription CR", func() {
+			s := &operatorsv1alpha1.Subscription{}
+			err := r.Get(context.TODO(), client.ObjectKey{
+				Name:      "gpu-operator-certified",
+				Namespace: gpuAddon.Namespace,
+			}, s)
+			Expect(err).Should(HaveOccurred())
+			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("should delete the NFD CR", func() {
 			nfd := &nfdv1.NodeFeatureDiscovery{}
-			err := r.Client.Get(context.TODO(), types.NamespacedName{
+			err := r.Get(context.TODO(), types.NamespacedName{
 				Name:      common.GlobalConfig.NfdCrName,
 				Namespace: gpuAddon.Namespace,
 			}, nfd)
@@ -142,10 +163,7 @@ func prepareClusterForGPUAddonCreateTest() (*addonv1alpha1.GPUAddon, *GPUAddonRe
 	gpuAddon.UID = types.UID("uid-uid")
 	gpuAddon.Kind = "GPUAddon"
 
-	nfdCsv := common.NewCsv(common.GlobalConfig.NfdCsvNamespace, fmt.Sprintf("%v-test-csv", common.GlobalConfig.NfdCsvPrefix), common.NfdAlmExample)
-	gpuCsv := common.NewCsv(common.GlobalConfig.GpuCsvNamespace, fmt.Sprintf("%v-test-csv", common.GlobalConfig.GpuCsvPrefix), common.ClusterPolicyAlmExample)
-
-	r := newTestGPUAddonReconciler(gpuAddon, nfdCsv, gpuCsv)
+	r := newTestGPUAddonReconciler(gpuAddon)
 
 	return gpuAddon, r
 }
@@ -154,35 +172,61 @@ func prepareClusterForGPUAddonDeletionTest() (*addonv1alpha1.GPUAddon, *GPUAddon
 	gpuAddon := &addonv1alpha1.GPUAddon{}
 	gpuAddon.Name = "TestAddon"
 	gpuAddon.Namespace = common.GlobalConfig.AddonNamespace
-	gpuAddon.APIVersion = "v1alpha1"
-	gpuAddon.Kind = "GPUAddon"
 	gpuAddon.UID = types.UID("uid-uid")
 	gpuAddon.Finalizers = []string{common.GlobalConfig.AddonID}
 	now := metav1.NewTime(time.Now())
 	gpuAddon.ObjectMeta.DeletionTimestamp = &now
 
+	kind := reflect.TypeOf(gpuv1.ClusterPolicy{}).Name()
+	gvk := gpuv1.GroupVersion.WithKind(kind)
+
 	// This addon's CSV
 	gpuaddoncsv := common.NewCsv(common.GlobalConfig.AddonNamespace, common.GlobalConfig.AddonID, "")
 
-	ownerRef := []metav1.OwnerReference{}
-	ownerRef = append(ownerRef, metav1.OwnerReference{
-		UID:        gpuAddon.UID,
-		Kind:       gpuAddon.Kind,
-		APIVersion: gpuAddon.APIVersion,
-		Name:       gpuAddon.Name,
-	})
-	// NFD
-	nfdCr := &nfdv1.NodeFeatureDiscovery{}
-	nfdCr.Name = common.GlobalConfig.NfdCrName
-	nfdCr.Namespace = gpuAddon.Namespace
-	nfdCr.ObjectMeta.OwnerReferences = ownerRef
-	// ClusterPolicy
-	clusterPolicy := &gpuv1.ClusterPolicy{}
-	clusterPolicy.Name = common.GlobalConfig.ClusterPolicyName
-	clusterPolicy.Namespace = gpuAddon.Namespace
-	clusterPolicy.ObjectMeta.OwnerReferences = ownerRef
+	ownerRef := metav1.OwnerReference{
+		APIVersion:         gvk.GroupVersion().String(),
+		Kind:               gvk.Kind,
+		Name:               gpuAddon.Name,
+		UID:                gpuAddon.UID,
+		BlockOwnerDeletion: pointer.BoolPtr(true),
+		Controller:         pointer.BoolPtr(true),
+	}
 
-	r := newTestGPUAddonReconciler(gpuAddon, gpuaddoncsv, nfdCr, clusterPolicy)
+	// NFD
+	nfd := &nfdv1.NodeFeatureDiscovery{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            common.GlobalConfig.NfdCrName,
+			Namespace:       gpuAddon.Namespace,
+			OwnerReferences: []metav1.OwnerReference{ownerRef},
+		},
+	}
+
+	// ClusterPolicy
+	clusterPolicy := &gpuv1.ClusterPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            common.GlobalConfig.ClusterPolicyName,
+			OwnerReferences: []metav1.OwnerReference{ownerRef},
+		},
+	}
+
+	// Subscription
+	subscription := &operatorsv1alpha1.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "gpu-operator-certified",
+			Namespace:       gpuAddon.Namespace,
+			OwnerReferences: []metav1.OwnerReference{ownerRef},
+		},
+	}
+
+	// GPU Operator CSV
+	csv := &operatorsv1alpha1.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gpu-operator-certified.v1.10.1",
+			Namespace: gpuAddon.Namespace,
+		},
+	}
+
+	r := newTestGPUAddonReconciler(gpuAddon, gpuaddoncsv, nfd, subscription, csv, clusterPolicy)
 
 	return gpuAddon, r
 }

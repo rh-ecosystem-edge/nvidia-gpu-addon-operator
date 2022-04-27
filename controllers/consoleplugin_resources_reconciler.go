@@ -11,11 +11,11 @@ import (
 	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
 )
 
-type ConsolePluginResourcesReconciler struct{}
+type ConsolePluginResourceReconciler struct{}
 
-var _ ResourceReconciler = &ConsolePluginResourcesReconciler{}
+var _ ResourceReconciler = &ConsolePluginResourceReconciler{}
 
-func (r *ConsolePluginResourcesReconciler) Reconcile(
+func (r *ConsolePluginResourceReconciler) Reconcile(
 	ctx context.Context,
 	client client.Client,
 	gpuAddon *addonv1alpha1.GPUAddon) ([]metav1.Condition, error) {
@@ -26,6 +26,10 @@ func (r *ConsolePluginResourcesReconciler) Reconcile(
 	} else {
 		return disableConsolePlugin(ctx, client, logger)
 	}
+}
+
+func (r *ConsolePluginResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+	return nil
 }
 
 func enableConsolePlugin(ctx context.Context, client client.Client, logger logr.Logger) ([]metav1.Condition, error) {

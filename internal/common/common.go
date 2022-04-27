@@ -1,10 +1,16 @@
 package common
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	configv1 "github.com/openshift/api/config/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	utilversion "k8s.io/apimachinery/pkg/util/version"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type config struct {
@@ -52,4 +58,27 @@ func NewCondition(cond_type string, cond_status metav1.ConditionStatus, reason s
 		Message:            message,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
+}
+
+func GetOpenShiftVersion(client client.Client) (string, error) {
+	clusterVersion := &configv1.ClusterVersion{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: "version"}, clusterVersion)
+	if err != nil {
+		return "", err
+	}
+
+	for _, condition := range clusterVersion.Status.History {
+		if condition.State != "Completed" {
+			continue
+		}
+
+		ocpVersion, err := utilversion.ParseGeneric(condition.Version)
+		if err != nil {
+			return "", err
+		}
+
+		return fmt.Sprintf("%d.%d", ocpVersion.Major(), ocpVersion.Minor()), nil
+	}
+
+	return "", fmt.Errorf("failed to find Completed Cluster Version")
 }

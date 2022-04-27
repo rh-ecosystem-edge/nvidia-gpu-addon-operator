@@ -20,7 +20,7 @@ import (
 	"context"
 
 	configv1 "github.com/openshift/api/config/v1"
-	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,10 +34,10 @@ import (
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 )
 
-var _ = Describe("Subscription Resource Reconcile", Ordered, func() {
+var _ = Describe("NFD Resource Reconcile", Ordered, func() {
 	Context("Reconcile", func() {
 		common.ProcessConfig()
-		rrec := &SubscriptionResourceReconciler{}
+		rrec := &NFDResourceReconciler{}
 		gpuAddon := addonv1alpha1.GPUAddon{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -59,70 +59,60 @@ var _ = Describe("Subscription Resource Reconcile", Ordered, func() {
 		}
 
 		scheme := scheme.Scheme
-		Expect(operatorsv1alpha1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+		Expect(nfdv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
 		Expect(configv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
 
-		var s operatorsv1alpha1.Subscription
+		var nfd nfdv1.NodeFeatureDiscovery
 
-		It("should create the Subscription", func() {
+		It("should create the NFD instance", func() {
 			c := fake.
 				NewClientBuilder().
 				WithScheme(scheme).
 				WithRuntimeObjects(clusterVersion).
 				Build()
 
-			_, err := rrec.Reconcile(context.TODO(), c, &gpuAddon)
+			cond, err := rrec.Reconcile(context.TODO(), c, &gpuAddon)
 			Expect(err).ShouldNot(HaveOccurred())
+			Expect(cond).To(HaveLen(1))
+			Expect(cond[0].Type).To(Equal(NFDDeployedCondition))
+			Expect(cond[0].Status).To(Equal(metav1.ConditionTrue))
 
 			err = c.Get(context.TODO(), types.NamespacedName{
 				Namespace: gpuAddon.Namespace,
-				Name:      "gpu-operator-certified",
-			}, &s)
+				Name:      common.GlobalConfig.NfdCrName,
+			}, &nfd)
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
 
 	Context("Delete", func() {
 		common.ProcessConfig()
-		rrec := &SubscriptionResourceReconciler{}
+		rrec := &NFDResourceReconciler{}
 
-		s := &operatorsv1alpha1.Subscription{
+		nfd := &nfdv1.NodeFeatureDiscovery{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "gpu-operator-certified",
-				Namespace: common.GlobalConfig.AddonNamespace,
-			},
-		}
-		csv := &operatorsv1alpha1.ClusterServiceVersion{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "gpu-operator-certified.v1.10.1",
+				Name:      common.GlobalConfig.NfdCrName,
 				Namespace: common.GlobalConfig.AddonNamespace,
 			},
 		}
 
 		scheme := scheme.Scheme
-		Expect(operatorsv1alpha1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+		Expect(nfdv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
 
-		It("should delete the Subscription", func() {
+		It("should delete the NodeFeatureDiscovery", func() {
 			c := fake.
 				NewClientBuilder().
 				WithScheme(scheme).
-				WithRuntimeObjects(s, csv).
+				WithRuntimeObjects(nfd).
 				Build()
 
 			err := rrec.Delete(context.TODO(), c)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			err = c.Get(context.TODO(), types.NamespacedName{
-				Name:      s.Name,
-				Namespace: s.Namespace,
-			}, s)
-			Expect(err).Should(HaveOccurred())
-			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
-
-			err = c.Get(context.TODO(), types.NamespacedName{
-				Name:      csv.Name,
-				Namespace: csv.Namespace,
-			}, csv)
+				Name:      nfd.Name,
+				Namespace: nfd.Namespace,
+			}, nfd)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})

@@ -21,12 +21,10 @@ import (
 	"errors"
 	"fmt"
 
-	configv1 "github.com/openshift/api/config/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	utilversion "k8s.io/apimachinery/pkg/util/version"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -38,6 +36,9 @@ import (
 
 const (
 	SubscriptionDeployedCondition = "SubscriptionDeployed"
+
+	packageName      = "gpu-operator-certified"
+	subscriptionName = "gpu-operator-certified"
 )
 
 type SubscriptionResourceReconciler struct{}
@@ -67,7 +68,7 @@ func (r *SubscriptionResourceReconciler) Reconcile(
 	s := &operatorsv1alpha1.Subscription{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: gpuAddon.Namespace,
-			Name:      "gpu-operator-certified",
+			Name:      subscriptionName,
 		},
 	}
 
@@ -103,7 +104,7 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 		return errors.New("subscription cannot be nil")
 	}
 
-	ocpVersion, err := r.getOpenShiftVersion(client)
+	ocpVersion, err := common.GetOpenShiftVersion(client)
 	if err != nil {
 		return err
 	}
@@ -114,12 +115,38 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 		CatalogSource:          "certified-operators",
 		CatalogSourceNamespace: "openshift-marketplace",
 		Channel:                OpenShiftGPUOperatorCompatibilityMatrix[ocpVersion][lastIndex],
-		Package:                "gpu-operator-certified",
+		Package:                packageName,
 		InstallPlanApproval:    operatorsv1alpha1.ApprovalAutomatic,
 	}
 
 	if err := ctrl.SetControllerReference(gpuAddon, s, client.Scheme()); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *SubscriptionResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+	s := &operatorsv1alpha1.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: common.GlobalConfig.AddonNamespace,
+			Name:      subscriptionName,
+		},
+	}
+
+	err := c.Delete(ctx, s)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete Subscription %s: %w", s.Name, err)
+	}
+
+	csv, err := common.GetCsvWithPrefix(c, common.GlobalConfig.AddonNamespace, packageName)
+	if err != nil {
+		return err
+	}
+
+	err = c.Delete(ctx, csv)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete GPU Operator CSV %s: %w", csv.Name, err)
 	}
 
 	return nil
@@ -147,28 +174,4 @@ func (r *SubscriptionResourceReconciler) getDeployedConditionCreateSuccess() met
 		metav1.ConditionTrue,
 		"CreateCrSuccess",
 		"Subscription deployed successfully")
-}
-
-func (r *SubscriptionResourceReconciler) getOpenShiftVersion(client client.Client) (string, error) {
-	clusterVersion := &configv1.ClusterVersion{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: "version"}, clusterVersion)
-	// v, err := client.ClusterVersions().Get(context.TODO(), "version", metav1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-
-	for _, condition := range clusterVersion.Status.History {
-		if condition.State != "Completed" {
-			continue
-		}
-
-		ocpVersion, err := utilversion.ParseGeneric(condition.Version)
-		if err != nil {
-			return "", err
-		}
-
-		return fmt.Sprintf("%d.%d", ocpVersion.Major(), ocpVersion.Minor()), nil
-	}
-
-	return "", fmt.Errorf("failed to find Completed Cluster Version")
 }
