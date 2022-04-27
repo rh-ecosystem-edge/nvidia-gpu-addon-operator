@@ -1,6 +1,6 @@
 module github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator
 
-go 1.17
+go 1.18
 
 require (
 	github.com/NVIDIA/gpu-operator v1.10.0
@@ -8,7 +8,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/onsi/ginkgo/v2 v2.0.0
 	github.com/onsi/gomega v1.18.1
-	github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3
+	github.com/openshift/api v0.0.0-20211209135129-c58d9f695577
 	github.com/openshift/cluster-nfd-operator v0.0.0-20220330020541-019ae82962eb
 	github.com/operator-framework/api v0.11.0
 	github.com/operator-framework/operator-lifecycle-manager v0.20.0
@@ -48,7 +48,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/openshift/api v0.0.0-20211209135129-c58d9f695577 // indirect
 	github.com/openshift/custom-resource-status v1.1.1 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

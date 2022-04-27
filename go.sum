@@ -461,8 +461,6 @@ github.com/onsi/gomega v1.18.1/go.mod h1:0q+aL8jAiMXy9hbwj2mr5GziHiwhAIQpFmmtT5h
 github.com/openshift/api v0.0.0-20211209135129-c58d9f695577 h1:NUe82M8wMYXbd5s+WBAJ2QAZZivs+nhZ3zYgZFwKfqw=
 github.com/openshift/api v0.0.0-20211209135129-c58d9f695577/go.mod h1:DoslCwtqUpr3d/gsbq4ZlkaMEdYqKxuypsDjorcHhME=
 github.com/openshift/build-machinery-go v0.0.0-20210712174854-1bb7fd1518d3/go.mod h1:b1BuldmJlbA/xYtdZvKi+7j5YGB44qJUJDZ9zwiNCfE=
-github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3 h1:SG1aqwleU6bGD0X4mhkTNupjVnByMYYuW4XbnCPavQU=
-github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3/go.mod h1:cwhyki5lqBmrT0m8Im+9I7PGFaraOzcYPtEz93RcsGY=
 github.com/openshift/cluster-nfd-operator v0.0.0-20220330020541-019ae82962eb h1:jHBVo22aaLIhSXLU7M23tJ4QjjND7JG8SWBdHk22vLc=
 github.com/openshift/cluster-nfd-operator v0.0.0-20220330020541-019ae82962eb/go.mod h1:4OJzqPGkxDpeJ8X+GeGgK6lzkFoef3mIZnBsK+5mJPw=
 github.com/openshift/custom-resource-status v1.1.1 h1:CFL7mVPbec7aob7r6SWXiyCtXo6G8xZmLuyRj1F2s8Y=
@@ -1125,7 +1123,6 @@ k8s.io/apiserver v0.22.1/go.mod h1:2mcM6dzSt+XndzVQJX21Gx0/Klo7Aen7i0Ai6tIa400=
 k8s.io/apiserver v0.23.4/go.mod h1:A6l/ZcNtxGfPSqbFDoxxOjEjSKBaQmE+UTveOmMkpNc=
 k8s.io/client-go v0.21.3/go.mod h1:+VPhCgTsaFmGILxR/7E1N0S+ryO010QBeNCv5JwRGYU=
 k8s.io/client-go v0.22.1/go.mod h1:BquC5A4UOo4qVDUtoc04/+Nxp1MeHcVc1HJm1KmG8kk=
-k8s.io/client-go v0.23.0/go.mod h1:hrDnpnK1mSr65lHHcUuIZIXDgEbzc7/683c6hyG4jTA=
 k8s.io/client-go v0.23.4 h1:YVWvPeerA2gpUudLelvsolzH7c2sFoXXR5wM/sWqNFU=
 k8s.io/client-go v0.23.4/go.mod h1:PKnIL4pqLuvYUK1WU7RLTMYKPiIh7MYShLshtRY9cj0=
 k8s.io/code-generator v0.21.3/go.mod h1:K3y0Bv9Cz2cOW2vXUrNZlFbflhuPvuadW6JdnN6gGKo=
