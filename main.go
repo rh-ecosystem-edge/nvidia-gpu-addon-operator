@@ -50,6 +50,7 @@ import (
 	nvidiav1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/version"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -137,13 +138,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
+	setupLog.Info("starting manager", "version", version.Version(), "config", common.GlobalConfig)
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-
-	setupLog.Info(fmt.Sprintf("GPUAddon Operator running with config: %+v", common.GlobalConfig))
 }
 
 func watchForOwnClusterPoliciesWhenAvailable(c controller.Controller) error {

@@ -15,7 +15,7 @@ COPY --chown=1001:0 controllers/ controllers/
 COPY --chown=1001:0 internal/ internal/
 
 # Build
-RUN go build -ldflags="-s -w" -o bin/manager main.go
+RUN make build
 
 # Use UBI8 Micro as minimal base image to package the manager binary
 # Refer to https://www.redhat.com/en/blog/introduction-ubi-micro for more details
