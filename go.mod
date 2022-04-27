@@ -1,6 +1,6 @@
 module github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator
 
-go 1.17
+go 1.18
 
 require (
 	github.com/NVIDIA/gpu-operator v1.10.0
