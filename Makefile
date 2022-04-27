@@ -5,6 +5,8 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.0.1
 
+VERSION_PACKAGE = "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/version"
+
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
 # To re-generate a bundle for other specific channels without changing the standard setup, you can:
@@ -117,12 +119,12 @@ test: manifests generate fmt vet envtest ## Run tests.
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+build: ## Build manager binary.
+	go build -ldflags="-s -w -X ${VERSION_PACKAGE}.version=${VERSION}" -o bin/manager main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./main.go
+	go run -ldflags="-X ${VERSION_PACKAGE}.version=${VERSION}" ./main.go
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
