@@ -142,18 +142,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	c, err := client.New(ctrlconfig.GetConfigOrDie(), client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "failed to create client to jumpstart addon")
+		os.Exit(1)
+	}
+	if err := jumpstartAddon(c); err != nil {
+		setupLog.Error(err, "failed to jumpstart addon")
+		os.Exit(1)
+	}
+
 	setupLog.Info("starting manager", "version", version.Version(), "config", common.GlobalConfig)
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-
-	err = jumpstartAddon(mgr.GetClient())
-	if err != nil {
-		setupLog.Error(err, "failed to jumpstart addon")
-		os.Exit(1)
-	}
-
 }
 
 func watchForOwnClusterPoliciesWhenAvailable(c controller.Controller) error {
@@ -205,11 +208,8 @@ func jumpstartAddon(client client.Client) error {
 		return fmt.Errorf("failed to fetch GPUAddon CR %s in %s: %w", common.GlobalConfig.AddonID, common.GlobalConfig.AddonNamespace, err)
 	}
 	if isNotFound {
-		gpuAddon = &nvidiav1alpha1.GPUAddon{
-			// Default spec
-			Spec: nvidiav1alpha1.GPUAddonSpec{
-				ConsolePluginEnabled: true,
-			},
+		gpuAddon.Spec = nvidiav1alpha1.GPUAddonSpec{
+			ConsolePluginEnabled: true,
 		}
 	}
 
