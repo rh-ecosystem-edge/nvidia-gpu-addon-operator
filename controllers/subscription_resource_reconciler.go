@@ -74,6 +74,12 @@ func (r *SubscriptionResourceReconciler) Reconcile(
 
 	if exists {
 		s = existingSubscription
+
+		if s.Status.InstalledCSV != "" {
+			SubscriptionInstalled.WithLabelValues(s.Status.CurrentCSV, s.Status.InstalledCSV).Set(1)
+		} else {
+			SubscriptionInstalled.WithLabelValues("", "").Set(0)
+		}
 	}
 
 	res, err := controllerutil.CreateOrPatch(context.TODO(), client, s, func() error {
