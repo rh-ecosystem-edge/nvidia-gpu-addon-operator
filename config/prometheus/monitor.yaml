@@ -18,3 +18,26 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: controller-manager-metrics
+  namespace: system
+spec:
+  groups:
+    - name: NVIDIA GPUAddon GPU Operator Subscription Installation Pending
+      rules:
+        - alert: NVIDIAGPUAddonGPUOperatorSubscriptionInstallationPending
+          expr: |
+             nvidia_gpuaddon_gpu_operator_subscription_installed < 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: The NVIDIA GPUAddon GPU Operator installation is still pending after 10 minutes
+            message: |
+              The NVIDIA GPUAddon GPU Operator installation is still pending after 10 minutes, please
+              check the operator Subscription and ClusterServiceVersion for more details.
