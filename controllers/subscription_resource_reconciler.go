@@ -56,7 +56,7 @@ func (r *SubscriptionResourceReconciler) Reconcile(
 
 	err := client.Get(ctx, types.NamespacedName{
 		Namespace: gpuAddon.Namespace,
-		Name:      common.GlobalConfig.NfdCrName,
+		Name:      subscriptionName,
 	}, existingSubscription)
 
 	exists := !k8serrors.IsNotFound(err)
@@ -89,7 +89,7 @@ func (r *SubscriptionResourceReconciler) Reconcile(
 
 	logger.Info("Subscription reconciled successfully",
 		"name", s.Name,
-		"namespace", gpuAddon.Namespace,
+		"namespace", s.Namespace,
 		"result", res)
 
 	return conditions, nil
