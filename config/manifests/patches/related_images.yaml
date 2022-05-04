@@ -5,5 +5,5 @@ metadata:
   namespace: placeholder
 spec:
   relatedImages:
-    - name: gpu-ocp-console-plugin
-      image: quay.io/edge-infrastructure/console-plugin-nvidia-gpu:latest
+    - name: console-plugin
+      image: quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:248080b389af7249389d6d29c6683127b92932f2d6439f7474b3886b08773860

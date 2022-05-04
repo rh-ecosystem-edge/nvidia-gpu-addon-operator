@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	gpuv1 "github.com/NVIDIA/gpu-operator/api/v1"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

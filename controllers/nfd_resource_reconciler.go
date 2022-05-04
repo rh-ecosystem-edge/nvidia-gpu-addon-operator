@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
-	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
