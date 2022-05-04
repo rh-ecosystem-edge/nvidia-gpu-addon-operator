@@ -20,7 +20,7 @@ type config struct {
 	GpuCsvNamespace   string `envconfig:"GPU_CSV_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
 	AddonNamespace    string `envconfig:"WATCH_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
 	AddonID           string `envconfig:"ADDON_ID" default:"nvidia-gpu-addon"`
-	AddonLabel        string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-operator"`
+	AddonLabel        string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-addon"`
 	ClusterPolicyName string `envconfig:"CLUSTER_POLICY_NAME" default:"ocp-gpu-addon"`
 	NfdCrName         string `envconfig:"NFD_CR_NAME" default:"ocp-gpu-addon"`
 }
