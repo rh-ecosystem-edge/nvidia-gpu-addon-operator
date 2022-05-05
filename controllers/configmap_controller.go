@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pkg/errors"
 	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	v1 "k8s.io/api/core/v1"
@@ -80,7 +79,10 @@ func (r *ConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			logger.Error(err, "Invalid value in ConfigMap add-on delete label")
 		}
 		if toBeDeleted {
-			return ctrl.Result{}, errors.Wrap(r.deleteGpuAddonCr(ctx, req.Namespace), "Failed to delete GPUAddon CR")
+			if err := r.deleteGpuAddonCr(ctx, req.Namespace); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to delete GPUAddon CR: %w", err)
+			}
+			return ctrl.Result{}, nil
 		}
 	}
 

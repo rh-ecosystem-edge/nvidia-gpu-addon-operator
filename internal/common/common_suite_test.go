@@ -94,6 +94,67 @@ var _ = Describe("common.go | Common utils", func() {
 			Expect(v).To(Equal("4.9"))
 		})
 	})
+
+	Context("IsOpenshiftVersionAtLeast", func() {
+		clusterVersion := &configv1.ClusterVersion{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "version",
+			},
+			Status: configv1.ClusterVersionStatus{
+				History: []configv1.UpdateHistory{
+					{
+						State:   configv1.CompletedUpdate,
+						Version: "4.9.7",
+					},
+				},
+			},
+		}
+
+		scheme := scheme.Scheme
+		Expect(configv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
+
+		Context("when OpenShift version is greater or equal than the requested one", func() {
+			It("should return true", func() {
+				c := fake.
+					NewClientBuilder().
+					WithScheme(scheme).
+					WithRuntimeObjects(clusterVersion).
+					Build()
+
+				v, err := IsOpenShiftVersionAtLeast(c, "4.9")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(v).To(BeTrue())
+			})
+		})
+
+		Context("when OpenShift version is less than the requested one", func() {
+			It("should return false", func() {
+				c := fake.
+					NewClientBuilder().
+					WithScheme(scheme).
+					WithRuntimeObjects(clusterVersion).
+					Build()
+
+				v, err := IsOpenShiftVersionAtLeast(c, "4.10")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(v).To(BeFalse())
+			})
+		})
+
+		Context("when the requested version is not valid", func() {
+			It("should return false", func() {
+				c := fake.
+					NewClientBuilder().
+					WithScheme(scheme).
+					WithRuntimeObjects(clusterVersion).
+					Build()
+
+				v, err := IsOpenShiftVersionAtLeast(c, "4.invalid")
+				Expect(err).Should(HaveOccurred())
+				Expect(v).To(BeFalse())
+			})
+		})
+	})
 })
 
 var _ = Describe("CSV Utils", func() {

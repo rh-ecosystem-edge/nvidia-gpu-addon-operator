@@ -13,6 +13,7 @@ import (
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
 	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
 
@@ -241,6 +242,7 @@ func newTestGPUAddonReconciler(objs ...runtime.Object) *GPUAddonReconciler {
 	Expect(gpuv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(nfdv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 	Expect(configv1.AddToScheme(s)).ShouldNot(HaveOccurred())
+	Expect(appsv1.AddToScheme(s)).ShouldNot(HaveOccurred())
 
 	clusterVersion := &configv1.ClusterVersion{
 		ObjectMeta: metav1.ObjectMeta{

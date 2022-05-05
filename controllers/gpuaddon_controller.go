@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"strings"
 
+	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
-	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -59,6 +61,10 @@ var resourceOrderedReconcilers = []ResourceReconciler{
 //+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=clusterserviceversions,verbs=get;list;watch;delete
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=operators.coreos.com,namespace=system,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;watch;patch
+//+kubebuilder:rbac:groups=apps,namespace=system,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",namespace=system,resources=services,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -93,7 +99,10 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			}
 
 			gpuAddon.Finalizers = common.SliceRemoveString(gpuAddon.Finalizers, common.GlobalConfig.AddonID)
-			return ctrl.Result{}, errors.Wrap(r.Client.Update(ctx, &gpuAddon), "failed to remove finalizer")
+
+			if err := r.Client.Update(ctx, &gpuAddon); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", r.Client.Update(ctx, &gpuAddon))
+			}
 		}
 		return ctrl.Result{}, nil
 	}
@@ -122,6 +131,9 @@ func (r *GPUAddonReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Cont
 		For(&addonv1alpha1.GPUAddon{}).
 		Owns(&operatorsv1alpha1.Subscription{}).
 		Owns(&nfdv1.NodeFeatureDiscovery{}).
+		Owns(&consolev1alpha1.ConsolePlugin{}).
+		Owns(&appsv1.Deployment{}).
+		Owns(&corev1.Service{}).
 		Build(r)
 }
 
@@ -148,7 +160,7 @@ func (r *GPUAddonReconciler) patchStatus(ctx context.Context, gpuAddon addonv1al
 	}
 	patchErr := r.Status().Patch(ctx, &gpuAddon, patch)
 	if patchErr != nil {
-		return errors.Wrap(patchErr, "Failed to patch status")
+		return fmt.Errorf("failed to patch status: %w", patchErr)
 	}
 	return err
 }
@@ -157,7 +169,7 @@ func (r *GPUAddonReconciler) registerFinilizerIfNeeded(ctx context.Context, gpuA
 	if !common.SliceContainsString(gpuAddon.ObjectMeta.Finalizers, common.GlobalConfig.AddonID) {
 		gpuAddon.ObjectMeta.Finalizers = append(gpuAddon.ObjectMeta.Finalizers, common.GlobalConfig.AddonID)
 		if err := r.Update(ctx, &gpuAddon); err != nil {
-			return errors.Wrap(err, "could not add finalizer")
+			return fmt.Errorf("failed to add finalizer: %w", err)
 		}
 	}
 	return nil
