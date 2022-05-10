@@ -4,8 +4,14 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
+    certified: "false"
+    olm.skipRange: '>=0.0.0 <99.0.0'
     operatorframework.io/suggested-namespace: redhat-nvidia-gpu-addon
-  name: nvidia-gpu-addon-operator.v0.0.1
+    operators.operatorframework.io/builder: operator-sdk-v1.18.0+git
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+    repository: https://github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator
+    support: Red Hat
+  name: nvidia-gpu-addon-operator.v99.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -46,10 +52,8 @@ spec:
   maintainers:
   - email: openshift-nvidia@redhat.com
     name: Redhat ecosystem nvidia team
-  - email: sdayan@redhat.com
-    name: Sagi Dayan
-  maturity: alpha
+  maturity: beta
   provider:
     name: RedHat
     url: https://redhat.com
-  version: 0.0.1
+  version: 99.0.0
