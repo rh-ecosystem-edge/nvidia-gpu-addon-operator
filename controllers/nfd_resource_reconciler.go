@@ -95,7 +95,7 @@ func (r *NFDResourceReconciler) setDesiredNFD(
 	nfd.Spec = nfdv1.NodeFeatureDiscoverySpec{}
 
 	nfd.Spec.Operand = nfdv1.OperandSpec{
-		Image:           fmt.Sprintf("quay.io/openshift/origin-node-feature-discovery:%s", ocpVersion),
+		Image:           fmt.Sprintf("registry.redhat.io/openshift4/ose-node-feature-discovery:v%s", ocpVersion),
 		ImagePullPolicy: "Always",
 		ServicePort:     12000,
 	}
