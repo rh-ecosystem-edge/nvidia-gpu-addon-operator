@@ -23,7 +23,7 @@ type config struct {
 	AddonLabel         string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-addon"`
 	ClusterPolicyName  string `envconfig:"CLUSTER_POLICY_NAME" default:"ocp-gpu-addon"`
 	NfdCrName          string `envconfig:"NFD_CR_NAME" default:"ocp-gpu-addon"`
-	ConsolePluginImage string `envconfig:"CONSOLE_PLUGIN_IMAGE" default:"quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:248080b389af7249389d6d29c6683127b92932f2d6439f7474b3886b08773860"`
+	ConsolePluginImage string `envconfig:"RELATED_IMAGE_CONSOLE_PLUGIN" default:"quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:248080b389af7249389d6d29c6683127b92932f2d6439f7474b3886b08773860"`
 }
 
 var GlobalConfig config
