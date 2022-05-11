@@ -27,6 +27,10 @@ spec:
           requests:
             cpu: 5m
             memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
       - name: manager
         args:
         - "--health-probe-bind-address=:8081"

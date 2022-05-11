@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -363,6 +364,11 @@ func (r *ConsolePluginResourceReconciler) setDesiredConsolePluginDeployment(
 			ContainerPort: 9443,
 			Protocol:      corev1.ProtocolTCP,
 		},
+	}
+
+	consolePluginContainer.SecurityContext = &corev1.SecurityContext{
+		AllowPrivilegeEscalation: pointer.Bool(true),
+		RunAsNonRoot:             pointer.Bool(true),
 	}
 	consolePluginContainer.VolumeMounts = []corev1.VolumeMount{
 		{
