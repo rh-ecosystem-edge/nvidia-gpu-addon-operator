@@ -170,10 +170,7 @@ func watchForOwnClusterPoliciesWhenAvailable(c controller.Controller) error {
 
 	err := c.Watch(
 		&source.Kind{Type: &gpuv1.ClusterPolicy{}},
-		&handler.EnqueueRequestForOwner{
-			OwnerType:    &nvidiav1alpha1.GPUAddon{},
-			IsController: true,
-		})
+		&handler.EnqueueRequestForObject{})
 
 	if err != nil {
 		return fmt.Errorf("unable to watch for owned ClusterPolicy CRs: %w", err)
