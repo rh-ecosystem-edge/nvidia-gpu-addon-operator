@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.17 as builder
+FROM registry.access.redhat.com/ubi8/go-toolset:1.17.7 as builder
 WORKDIR /opt/app-root/src
 
 # Copy the Makefile, Go Modules manifests and vendored dependencies
@@ -21,5 +21,6 @@ RUN make build
 # Refer to https://www.redhat.com/en/blog/introduction-ubi-micro for more details
 FROM registry.access.redhat.com/ubi8/ubi-micro:8.5
 COPY --from=builder /opt/app-root/src/bin/manager /usr/local/bin/manager
+USER 1001
 
 ENTRYPOINT ["/usr/local/bin/manager"]
