@@ -40,6 +40,11 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
 BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 
+# managed-tenants-bundle prev-version use pv=<version> to override
+pv ?= null
+# managed-tenants-bundle channel use c=<alpha/beta/stable> to override
+c ?= alpha
+
 # USE_IMAGE_DIGESTS defines if images are resolved via tags or digests
 # You can enable this value if you would like to use SHA Based Digests
 # To enable set flag to true
@@ -49,7 +54,7 @@ ifeq ($(USE_IMAGE_DIGESTS), true)
 endif
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/sdayan/t-o:latest
+IMG ?= quay.io/edge-infrastructure/nvidia-gpu-addon-operator:1.0.0
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.23
 
@@ -201,6 +206,10 @@ bundle-build: ## Build the bundle image.
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
 	$(MAKE) docker-push IMG=$(BUNDLE_IMG)
+
+.PHONY: mtb-bundle
+mtb-bundle: bundle
+	./hack/create-managed-tenants-bundle.py -mP $(mP) -v $(v) -pv $(pv) -c $(c)
 
 .PHONY: opm
 OPM = ./bin/opm
