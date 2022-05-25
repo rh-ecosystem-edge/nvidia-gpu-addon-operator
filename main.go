@@ -53,8 +53,11 @@ import (
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	nvidiav1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
-	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers/configmap"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers/gpuaddon"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers/monitoring"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/version"
 	//+kubebuilder:scaffold:imports
@@ -112,7 +115,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	gpuAddonController, err := (&controllers.GPUAddonReconciler{
+	gpuAddonController, err := (&gpuaddon.GPUAddonReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr)
@@ -128,7 +131,7 @@ func main() {
 		}
 	}()
 
-	if err = (&controllers.ConfigMapReconciler{
+	if err = (&configmap.ConfigMapReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
