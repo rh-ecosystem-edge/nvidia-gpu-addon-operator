@@ -3,3 +3,7 @@ dependencies:
   value:
     packageName: nfd
     version: "4.10.0"
+- type: olm.package
+  value:
+    packageName: ose-prometheus-operator
+    version: "4.10.0"

@@ -24,7 +24,7 @@ func TestMain(t *testing.T) {
 	RunSpecs(t, "Main Suite")
 }
 
-var _ = Describe("Jumpstart tests", func() {
+var _ = Describe("Jumpstart GPUAddon", func() {
 	common.ProcessConfig()
 	It("Should create GPUAddon CR if not exists", func() {
 		c := newTestClientWith()
@@ -48,7 +48,30 @@ var _ = Describe("Jumpstart tests", func() {
 		versionLabel := fmt.Sprintf("%v-version", common.GlobalConfig.AddonLabel)
 		Expect(g.ObjectMeta.Labels[versionLabel]).To(Equal(version.Version()))
 	})
+})
 
+var _ = Describe("Jumpstart Monitoring", func() {
+	common.ProcessConfig()
+	It("should create the Monitoring CR if not exists", func() {
+		c := newTestClientWith()
+		Expect(jumpstartMonitoring(c)).ShouldNot(HaveOccurred())
+		m := &addonv1alpha1.Monitoring{}
+		Expect(c.Get(context.TODO(), types.NamespacedName{
+			Namespace: common.GlobalConfig.AddonNamespace,
+			Name:      common.GlobalConfig.AddonID,
+		}, m)).ShouldNot(HaveOccurred())
+	})
+	It("should not fail if a Monitoring CR already exists", func() {
+		m := &addonv1alpha1.Monitoring{}
+		m.Name = common.GlobalConfig.AddonID
+		m.Namespace = common.GlobalConfig.AddonNamespace
+		c := newTestClientWith(m)
+		Expect(jumpstartMonitoring(c)).ShouldNot(HaveOccurred())
+		Expect(c.Get(context.TODO(), types.NamespacedName{
+			Namespace: common.GlobalConfig.AddonNamespace,
+			Name:      common.GlobalConfig.AddonID,
+		}, m)).ShouldNot(HaveOccurred())
+	})
 })
 
 func newTestClientWith(objs ...runtime.Object) client.Client {
