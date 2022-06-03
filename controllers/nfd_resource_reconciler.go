@@ -59,10 +59,28 @@ func (r *NFDResourceReconciler) Reconcile(
 		nfd = existingNFD
 	}
 
-	res, err := controllerutil.CreateOrPatch(context.TODO(), client, nfd, func() error {
+	_, err = controllerutil.CreateOrPatch(context.TODO(), client, nfd, func() error {
 		return r.setDesiredNFD(client, nfd, gpuAddon)
 	})
 
+	if err != nil {
+		conditions = append(conditions, r.getDeployedConditionCreateFailed())
+		return conditions, err
+	}
+
+	// FIXME: Figure out why the NFD operator returns after a finalizer update on the NFD
+	// CR, because this update does not trigger another reconciliation (as there is no
+	// generation bump) and the NFD CR is never actually reconciled without an additional
+	// spec update.
+	//
+	// https://github.com/openshift/cluster-nfd-operator/blob/release-4.10/controllers/nodefeaturediscovery_controller.go#L395
+	// https://github.com/openshift/cluster-nfd-operator/blob/release-4.10/controllers/nodefeaturediscovery_controller.go#L485
+	res, err := controllerutil.CreateOrPatch(context.TODO(), client, nfd, func() error {
+		nfd.Spec.WorkerConfig = &nfdv1.ConfigMap{
+			ConfigData: fmt.Sprintf("%s\n", workerConfig),
+		}
+		return nil
+	})
 	if err != nil {
 		conditions = append(conditions, r.getDeployedConditionCreateFailed())
 		return conditions, err
