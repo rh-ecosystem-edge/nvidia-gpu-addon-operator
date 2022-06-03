@@ -1,11 +1,5 @@
 dependencies:
-- type: olm.gvk
+- type: olm.package
   value:
-    group: nfd.openshift.io
-    kind: NodeFeatureDiscovery
-    version: v1
-#- type: olm.gvk
-#  value:
-#    group: console.openshift.io
-#    kind: ConsolePlugin
-#    version: v1alpha1
+    packageName: nfd
+    version: "4.10.0"
