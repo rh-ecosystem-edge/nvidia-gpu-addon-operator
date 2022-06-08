@@ -53,8 +53,13 @@ import (
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	promv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+
 	nvidiav1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
-	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers/configmap"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers/gpuaddon"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/controllers/monitoring"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/version"
 	//+kubebuilder:scaffold:imports
@@ -76,6 +81,8 @@ func init() {
 	utilruntime.Must(consolev1alpha1.AddToScheme(scheme))
 	utilruntime.Must(configv1.AddToScheme(scheme))
 	utilruntime.Must(operatorv1.AddToScheme(scheme))
+	utilruntime.Must(promv1.AddToScheme(scheme))
+	utilruntime.Must(promv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -112,7 +119,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	gpuAddonController, err := (&controllers.GPUAddonReconciler{
+	gpuAddonController, err := (&gpuaddon.GPUAddonReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr)
@@ -128,11 +135,18 @@ func main() {
 		}
 	}()
 
-	if err = (&controllers.ConfigMapReconciler{
+	if err = (&configmap.ConfigMapReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ConfigMap")
+		os.Exit(1)
+	}
+	if err = (&monitoring.MonitoringReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Monitoring")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
@@ -153,6 +167,10 @@ func main() {
 	}
 	if err := jumpstartAddon(c); err != nil {
 		setupLog.Error(err, "failed to jumpstart addon")
+		os.Exit(1)
+	}
+	if err := jumpstartMonitoring(c); err != nil {
+		setupLog.Error(err, "failed to jumpstart monitoring")
 		os.Exit(1)
 	}
 
@@ -229,6 +247,41 @@ func jumpstartAddon(client client.Client) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to reconcile GPUAddon CR %s in %s, result: %v. error: %w", common.GlobalConfig.AddonID, common.GlobalConfig.AddonNamespace, result, err)
+	}
+
+	return nil
+}
+
+func jumpstartMonitoring(client client.Client) error {
+	m := &nvidiav1alpha1.Monitoring{}
+	err := client.Get(context.TODO(), types.NamespacedName{
+		Name:      common.GlobalConfig.AddonID,
+		Namespace: common.GlobalConfig.AddonNamespace,
+	}, m)
+	isNotFound := k8serrors.IsNotFound(err)
+	if err != nil && !isNotFound {
+		return fmt.Errorf("failed to fetch Monitoring CR %s in %s: %w", common.GlobalConfig.AddonID, common.GlobalConfig.AddonNamespace, err)
+	}
+	if isNotFound {
+		m.Spec = nvidiav1alpha1.MonitoringSpec{}
+	}
+
+	m.ObjectMeta = metav1.ObjectMeta{
+		Name:      common.GlobalConfig.AddonID,
+		Namespace: common.GlobalConfig.AddonNamespace,
+	}
+
+	result, err := controllerutil.CreateOrPatch(context.TODO(), client, m, func() error {
+		// versionLabel := fmt.Sprintf("%v-version", common.GlobalConfig.AddonLabel)
+		// m.ObjectMeta.Labels = map[string]string{
+		// 	versionLabel: version.Version(),
+		// }
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to reconcile Monitoring CR %s in %s, result: %v. error: %w",
+			common.GlobalConfig.AddonID, common.GlobalConfig.AddonNamespace, result, err)
 	}
 
 	return nil

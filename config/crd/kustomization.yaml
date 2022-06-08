@@ -3,6 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/nvidia.addons.rh-ecosystem-edge.io_gpuaddons.yaml
+- bases/nvidia.addons.rh-ecosystem-edge.io_monitorings.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

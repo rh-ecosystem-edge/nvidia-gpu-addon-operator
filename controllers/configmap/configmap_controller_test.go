@@ -1,4 +1,4 @@
-package controllers
+package configmap
 
 import (
 	"context"

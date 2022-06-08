@@ -11,6 +11,7 @@ require (
 	github.com/openshift/cluster-nfd-operator v0.0.0-20220330020541-019ae82962eb
 	github.com/operator-framework/api v0.11.0
 	github.com/operator-framework/operator-lifecycle-manager v0.20.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.56.3
 	github.com/prometheus/client_golang v1.12.1
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0

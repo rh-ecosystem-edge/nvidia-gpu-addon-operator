@@ -83,6 +83,16 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - secrets
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - services
   verbs:
   - create
@@ -96,6 +106,53 @@ rules:
   - apps
   resources:
   - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagerconfigs
+  - alertmanagers
+  - prometheuses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - podmonitors
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - prometheusrules
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
   verbs:
   - create
   - delete
@@ -138,6 +195,32 @@ rules:
   - nvidia.addons.rh-ecosystem-edge.io
   resources:
   - gpuaddons/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nvidia.addons.rh-ecosystem-edge.io
+  resources:
+  - monitorings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nvidia.addons.rh-ecosystem-edge.io
+  resources:
+  - monitorings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - nvidia.addons.rh-ecosystem-edge.io
+  resources:
+  - monitorings/status
   verbs:
   - get
   - patch

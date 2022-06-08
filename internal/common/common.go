@@ -14,16 +14,41 @@ import (
 )
 
 type config struct {
-	NfdCsvPrefix       string `envconfig:"NFD_CSV_PREFIX" default:"nfd"`
-	NfdCsvNamespace    string `envconfig:"NFD_CSV_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
-	GpuCsvPrefix       string `envconfig:"GPU_CSV_PREFIX" default:"gpu-operator-certified"`
-	GpuCsvNamespace    string `envconfig:"GPU_CSV_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
-	AddonNamespace     string `envconfig:"WATCH_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
-	AddonID            string `envconfig:"ADDON_ID" default:"nvidia-gpu-addon"`
-	AddonLabel         string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-addon"`
-	ClusterPolicyName  string `envconfig:"CLUSTER_POLICY_NAME" default:"ocp-gpu-addon"`
-	NfdCrName          string `envconfig:"NFD_CR_NAME" default:"ocp-gpu-addon"`
+	// NFD_CSV_PREFIX
+	NfdCsvPrefix string `envconfig:"NFD_CSV_PREFIX" default:"nfd"`
+
+	// NFD_CSV_NAMESPACE
+	NfdCsvNamespace string `envconfig:"NFD_CSV_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
+
+	// GPU_CSV_PREFIX
+	GpuCsvPrefix string `envconfig:"GPU_CSV_PREFIX" default:"gpu-operator-certified"`
+
+	// GPU_CSV_NAMESPACE
+	GpuCsvNamespace string `envconfig:"GPU_CSV_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
+
+	// WATCH_NAMESPACE
+	AddonNamespace string `envconfig:"WATCH_NAMESPACE" default:"redhat-nvidia-gpu-addon"`
+
+	// ADDON_ID
+	AddonID string `envconfig:"ADDON_ID" default:"nvidia-gpu-addon"`
+
+	// ADDON_LABEL
+	AddonLabel string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-addon"`
+
+	// CLUSTER_POLICY_NAME
+	ClusterPolicyName string `envconfig:"CLUSTER_POLICY_NAME" default:"ocp-gpu-addon"`
+
+	// NFD_CR_NAME
+	NfdCrName string `envconfig:"NFD_CR_NAME" default:"ocp-gpu-addon"`
+
+	// RELATED_IMAGE_PLUGIN_IMAGE
 	ConsolePluginImage string `envconfig:"RELATED_IMAGE_CONSOLE_PLUGIN" default:"quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:248080b389af7249389d6d29c6683127b92932f2d6439f7474b3886b08773860"`
+
+	// PAGER_DUTY_SECRET_NAME
+	PagerDutySecretName string `envconfig:"PAGER_DUTY_SECRET_NAME" default:"pagerduty"`
+
+	// DEAD_MANS_SNITCH_SECRET_NAME
+	DeadMansSnitchSecretName string `envconfig:"PAGE_RDUTY_SECRET_NAME" default:"deadmanssnitch"`
 }
 
 var GlobalConfig config
