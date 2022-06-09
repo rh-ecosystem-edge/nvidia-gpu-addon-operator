@@ -32,7 +32,7 @@ def handle_csv(bundle_path, version, prev_version, channel):
     csv["spec"]["version"] = f"{version}"
     csv["spec"]["maturity"] = f"{channel}"
     if prev_version != "null":
-        csv["spec"]["replaces"] = f"${ADDON_NAME}.{prev_version}"
+        csv["spec"]["replaces"] = f"{ADDON_NAME}.{prev_version}"
     with open(csv_file, "w") as _f:
         yaml.dump(csv, _f)
 
