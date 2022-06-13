@@ -3,7 +3,6 @@
 import os
 import shutil
 import yaml
-import pathlib
 from argparse import ArgumentParser
 
 ANNOTATION_PATH = "metadata/annotations.yaml"
@@ -11,7 +10,6 @@ ADDON_PATH = "addons/nvidia-gpu-addon/main"
 MANIFESTS = "manifests"
 ADDON_NAME = "nvidia-gpu-addon-operator"
 CSV_SUFFIX = "clusterserviceversion.yaml"
-
 
 
 def get_csv_file(bundle_path):
@@ -32,9 +30,10 @@ def handle_csv(bundle_path, version, prev_version, channel):
     csv["spec"]["version"] = f"{version}"
     csv["spec"]["maturity"] = f"{channel}"
     if prev_version != "null":
-        csv["spec"]["replaces"] = f"${ADDON_NAME}.{prev_version}"
+        csv["spec"]["replaces"] = f"{ADDON_NAME}.{prev_version}"
     with open(csv_file, "w") as _f:
         yaml.dump(csv, _f)
+
 
 def handle_annotations(bundle_path, channel, namespace):
     print("Handling annotations")
@@ -63,8 +62,6 @@ def create_new_bundle(args):
             exit(1)
     shutil.copytree("./bundle", bundle_path)
     shutil.rmtree(os.path.join(bundle_path, "tests"))
-    #copy_tree("./bundle/", bundle_path)
-    #remove_tree(os.path.join(bundle_path, "tests"))
 
     handle_annotations(bundle_path, args.channel, args.namespace)
     handle_csv(bundle_path, version, args.prev_version, args.channel)
