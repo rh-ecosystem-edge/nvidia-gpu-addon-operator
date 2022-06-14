@@ -118,7 +118,7 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 	lastIndex := len(OpenShiftGPUOperatorCompatibilityMatrix[ocpVersion]) - 1
 
 	s.Spec = &operatorsv1alpha1.SubscriptionSpec{
-		CatalogSource:          "certified-operators",
+		CatalogSource:          "addon-nvidia-gpu-addon",
 		CatalogSourceNamespace: "openshift-marketplace",
 		Channel:                OpenShiftGPUOperatorCompatibilityMatrix[ocpVersion][lastIndex],
 		Package:                packageName,
