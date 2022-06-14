@@ -19,7 +19,7 @@ package gpuaddon
 var (
 	OpenShiftGPUOperatorCompatibilityMatrix = map[string][]string{
 		"4.9": []string{
-			"v1.9",
+			"v1.9.0",
 			"v1.10",
 		},
 		"4.10": []string{
