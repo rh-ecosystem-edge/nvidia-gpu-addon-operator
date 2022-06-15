@@ -194,10 +194,14 @@ func (r *ConsolePluginResourceReconciler) patchClusterConsole(
 	}
 
 	patched := console.DeepCopy()
-	patched.Spec.Plugins = append(patched.Spec.Plugins, consolePluginName)
 
-	if err := c.Patch(ctx, patched, client.MergeFrom(console)); err != nil {
-		return err
+	exists := common.SliceContainsString(patched.Spec.Plugins, consolePluginName)
+	if !exists {
+		patched.Spec.Plugins = append(patched.Spec.Plugins, consolePluginName)
+
+		if err := c.Patch(ctx, patched, client.MergeFrom(console)); err != nil {
+			return err
+		}
 	}
 
 	logger.Info("ConsolePlugin Cluster Console reconciled successfully",
