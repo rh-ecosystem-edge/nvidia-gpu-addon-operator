@@ -130,17 +130,17 @@ var _ = Describe("ConsolePlugin Resource Reconcile", Ordered, func() {
 		})
 
 		Context("when enabled", func() {
+			gpuAddon.Spec = addonv1alpha1.GPUAddonSpec{
+				ConsolePluginEnabled: true,
+			}
+
+			c := fake.
+				NewClientBuilder().
+				WithScheme(scheme).
+				WithRuntimeObjects(clusterVersion, console).
+				Build()
+
 			It("should create the ConsolePlugin components", func() {
-				gpuAddon.Spec = addonv1alpha1.GPUAddonSpec{
-					ConsolePluginEnabled: true,
-				}
-
-				c := fake.
-					NewClientBuilder().
-					WithScheme(scheme).
-					WithRuntimeObjects(clusterVersion, console).
-					Build()
-
 				conditions, err := rrec.Reconcile(context.TODO(), c, &gpuAddon)
 				Expect(err).ShouldNot(HaveOccurred())
 
@@ -171,6 +171,24 @@ var _ = Describe("ConsolePlugin Resource Reconcile", Ordered, func() {
 
 				Expect(console.Spec.Plugins).To(HaveLen(1))
 				Expect(console.Spec.Plugins[0]).To(Equal("console-plugin-nvidia-gpu"))
+			})
+
+			Context("and reconciled more than once", func() {
+				It("should not add an item in Console `cluster` plugins array", func() {
+					_, err := rrec.Reconcile(context.TODO(), c, &gpuAddon)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					_, err = rrec.Reconcile(context.TODO(), c, &gpuAddon)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					err = c.Get(context.TODO(), client.ObjectKey{
+						Name: "cluster",
+					}, console)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					Expect(console.Spec.Plugins).To(HaveLen(1))
+					Expect(console.Spec.Plugins[0]).To(Equal("console-plugin-nvidia-gpu"))
+				})
 			})
 		})
 
