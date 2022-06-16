@@ -27,7 +27,7 @@ var (
 			Name: "nvidia_gpuaddon_gpu_operator_subscription_installed",
 			Help: "Reports whether the NVIDIA GPUAddon GPU Operator OLM Subscription is installed",
 		},
-		[]string{"current_csv", "installed_csv"},
+		[]string{},
 	)
 )
 
