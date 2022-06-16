@@ -36,6 +36,7 @@ spec:
         - name: RELATED_IMAGE_CONSOLE_PLUGIN
           value: quay.io/edge-infrastructure/console-plugin-nvidia-gpu:latest
         image: controller:latest
+        imagePullPolicy: Always
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
