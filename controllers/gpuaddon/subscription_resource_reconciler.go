@@ -76,9 +76,9 @@ func (r *SubscriptionResourceReconciler) Reconcile(
 		s = existingSubscription
 
 		if s.Status.InstalledCSV != "" {
-			SubscriptionInstalled.WithLabelValues(s.Status.CurrentCSV, s.Status.InstalledCSV).Set(1)
+			SubscriptionInstalled.WithLabelValues().Set(1)
 		} else {
-			SubscriptionInstalled.WithLabelValues("", "").Set(0)
+			SubscriptionInstalled.WithLabelValues().Set(0)
 		}
 	}
 
