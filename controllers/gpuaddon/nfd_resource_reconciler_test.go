@@ -19,7 +19,6 @@ package gpuaddon
 import (
 	"context"
 
-	configv1 "github.com/openshift/api/config/v1"
 	nfdv1 "github.com/openshift/cluster-nfd-operator/api/v1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -44,23 +43,9 @@ var _ = Describe("NFD Resource Reconcile", Ordered, func() {
 				Namespace: "test",
 			},
 		}
-		clusterVersion := &configv1.ClusterVersion{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "version",
-			},
-			Status: configv1.ClusterVersionStatus{
-				History: []configv1.UpdateHistory{
-					{
-						State:   configv1.CompletedUpdate,
-						Version: "4.9.7",
-					},
-				},
-			},
-		}
 
 		scheme := scheme.Scheme
 		Expect(nfdv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
-		Expect(configv1.AddToScheme(scheme)).ShouldNot(HaveOccurred())
 
 		var nfd nfdv1.NodeFeatureDiscovery
 
@@ -68,7 +53,7 @@ var _ = Describe("NFD Resource Reconcile", Ordered, func() {
 			c := fake.
 				NewClientBuilder().
 				WithScheme(scheme).
-				WithRuntimeObjects(clusterVersion).
+				WithRuntimeObjects().
 				Build()
 
 			cond, err := rrec.Reconcile(context.TODO(), c, &gpuAddon)

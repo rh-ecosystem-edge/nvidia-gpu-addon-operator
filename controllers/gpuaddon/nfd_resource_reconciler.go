@@ -109,15 +109,10 @@ func (r *NFDResourceReconciler) setDesiredNFD(
 		return errors.New("nfd cannot be nil")
 	}
 
-	ocpVersion, err := common.GetOpenShiftVersion(client)
-	if err != nil {
-		return err
-	}
-
 	nfd.Spec = nfdv1.NodeFeatureDiscoverySpec{}
 
 	nfd.Spec.Operand = nfdv1.OperandSpec{
-		Image:           fmt.Sprintf("registry.redhat.io/openshift4/ose-node-feature-discovery:v%s", ocpVersion),
+		Image:           common.GlobalConfig.NodeFeatureDiscoveryImage,
 		ImagePullPolicy: "Always",
 		ServicePort:     12000,
 	}
