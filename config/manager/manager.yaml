@@ -35,6 +35,8 @@ spec:
         env:
         - name: RELATED_IMAGE_CONSOLE_PLUGIN
           value: quay.io/edge-infrastructure/console-plugin-nvidia-gpu:release-0.0.1
+        - name: RELATED_IMAGE_NODE_FEATURE_DISCOVERY
+          value: registry.access.redhat.com/openshift4/ose-node-feature-discovery:v4.10
         image: controller:latest
         imagePullPolicy: Always
         name: manager
