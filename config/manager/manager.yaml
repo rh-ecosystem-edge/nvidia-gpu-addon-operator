@@ -34,7 +34,7 @@ spec:
         - --leader-elect
         env:
         - name: RELATED_IMAGE_CONSOLE_PLUGIN
-          value: quay.io/edge-infrastructure/console-plugin-nvidia-gpu:latest
+          value: quay.io/edge-infrastructure/console-plugin-nvidia-gpu:release-0.0.1
         image: controller:latest
         imagePullPolicy: Always
         name: manager

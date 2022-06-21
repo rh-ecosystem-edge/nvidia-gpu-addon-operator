@@ -42,7 +42,7 @@ type config struct {
 	NfdCrName string `envconfig:"NFD_CR_NAME" default:"ocp-gpu-addon"`
 
 	// RELATED_IMAGE_PLUGIN_IMAGE
-	ConsolePluginImage string `envconfig:"RELATED_IMAGE_CONSOLE_PLUGIN" default:"quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:248080b389af7249389d6d29c6683127b92932f2d6439f7474b3886b08773860"`
+	ConsolePluginImage string `envconfig:"RELATED_IMAGE_CONSOLE_PLUGIN" default:"quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:cec17462944cb2f800e7477101e0470c5f7a07998c012ef7470e14993ebebf40"`
 
 	// PAGER_DUTY_SECRET_NAME
 	PagerDutySecretName string `envconfig:"PAGER_DUTY_SECRET_NAME" default:"pagerduty"`
