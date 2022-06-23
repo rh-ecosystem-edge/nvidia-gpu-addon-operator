@@ -25,6 +25,3 @@ resources:
 #    # Update the indices in this path if adding or removing volumes in the manager's Deployment.
 #    - op: remove
 #      path: /spec/template/spec/volumes/0
-
-patchesStrategicMerge:
-- patches/related_images.yaml
