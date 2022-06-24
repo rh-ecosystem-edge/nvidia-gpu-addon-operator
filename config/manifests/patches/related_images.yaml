@@ -1,9 +1,0 @@
-apiVersion: operators.coreos.com/v1alpha1
-kind: ClusterServiceVersion
-metadata:
-  name: nvidia-gpu-addon-operator.v99.0.0
-  namespace: placeholder
-spec:
-  relatedImages:
-    - name: console-plugin
-      image: quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:cec17462944cb2f800e7477101e0470c5f7a07998c012ef7470e14993ebebf40
