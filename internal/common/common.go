@@ -44,9 +44,6 @@ type config struct {
 	// RELATED_IMAGE_PLUGIN_IMAGE
 	ConsolePluginImage string `envconfig:"RELATED_IMAGE_CONSOLE_PLUGIN" default:"quay.io/edge-infrastructure/console-plugin-nvidia-gpu@sha256:cec17462944cb2f800e7477101e0470c5f7a07998c012ef7470e14993ebebf40"`
 
-	// RELATED_IMAGE_NODE_FEATURE_DISCOVERY
-	NodeFeatureDiscoveryImage string `envconfig:"RELATED_IMAGE_NODE_FEATURE_DISCOVERY" default:"registry.access.redhat.com/openshift4/ose-node-feature-discovery@sha256:07658ef3df4b264b02396e67af813a52ba416b47ab6e1d2d08025a350ccd2b7b"`
-
 	// PAGER_DUTY_SECRET_NAME
 	PagerDutySecretName string `envconfig:"PAGER_DUTY_SECRET_NAME" default:"pagerduty"`
 

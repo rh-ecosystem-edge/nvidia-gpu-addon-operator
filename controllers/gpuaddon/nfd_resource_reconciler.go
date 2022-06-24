@@ -112,7 +112,6 @@ func (r *NFDResourceReconciler) setDesiredNFD(
 	nfd.Spec = nfdv1.NodeFeatureDiscoverySpec{}
 
 	nfd.Spec.Operand = nfdv1.OperandSpec{
-		Image:           common.GlobalConfig.NodeFeatureDiscoveryImage,
 		ImagePullPolicy: "Always",
 		ServicePort:     12000,
 	}
