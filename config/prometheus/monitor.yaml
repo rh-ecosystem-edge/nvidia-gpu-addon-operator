@@ -5,6 +5,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     control-plane: controller-manager
+    app: controller-manager
   name: controller-manager-metrics-monitor
   namespace: system
 spec:
@@ -24,6 +25,7 @@ kind: PrometheusRule
 metadata:
   labels:
     control-plane: controller-manager
+    app: controller-manager
   name: controller-manager-metrics
   namespace: system
 spec:
