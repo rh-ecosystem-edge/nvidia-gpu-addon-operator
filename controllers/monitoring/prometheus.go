@@ -87,21 +87,21 @@ func (r *MonitoringReconciler) setDesiredPrometheus(
 		return errors.New("prometheus cannot be nil")
 	}
 
-	resourceSelector := metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"control-plane": "controller-manager",
+	selector := metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{Key: "app", Operator: metav1.LabelSelectorOpExists},
 		},
 	}
 
 	prometheus.Spec = promv1.PrometheusSpec{
 		CommonPrometheusFields: promv1.CommonPrometheusFields{
 			ServiceAccountName:     "prometheus-k8s",
-			ServiceMonitorSelector: &resourceSelector,
-			PodMonitorSelector:     &resourceSelector,
+			ServiceMonitorSelector: &selector,
+			PodMonitorSelector:     &selector,
 			EnableAdminAPI:         false,
 			ListenLocal:            true,
 		},
-		RuleSelector: &resourceSelector,
+		RuleNamespaceSelector: &selector,
 	}
 
 	prometheus.Spec.Alerting = &promv1.AlertingSpec{
