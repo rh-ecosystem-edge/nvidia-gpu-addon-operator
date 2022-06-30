@@ -162,34 +162,21 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
-CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+PROJECT_DIR = $(shell pwd)
+CONTROLLER_GEN = $(PROJECT_DIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
+	@GOBIN=$(PROJECT_DIR)/bin GO111MODULE=on go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2
 
-KUSTOMIZE = $(shell pwd)/bin/kustomize
+KUSTOMIZE = $(PROJECT_DIR)/bin/kustomize
 .PHONY: kustomize
 kustomize: ## Download kustomize locally if necessary.
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+	@GOBIN=$(PROJECT_DIR)/bin GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.5
 
-ENVTEST = $(shell pwd)/bin/setup-envtest
+ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
 .PHONY: envtest
 envtest: ## Download envtest-setup locally if necessary.
-	$(call go-get-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
-
-# go-get-tool will 'go get' any package $2 and install it to $1.
-PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-define go-get-tool
-@[ -f $(1) ] || { \
-set -e ;\
-TMP_DIR=$$(mktemp -d) ;\
-cd $$TMP_DIR ;\
-go mod init tmp ;\
-echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
-rm -rf $$TMP_DIR ;\
-}
-endef
+	@GOBIN=$(PROJECT_DIR)/bin GO111MODULE=on go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
