@@ -1,7 +1,7 @@
 dependencies:
 - type: olm.package
   value:
-    packageName: nfd
+    packageName: ose-nfd
     version: "4.10.0"
 - type: olm.package
   value:
