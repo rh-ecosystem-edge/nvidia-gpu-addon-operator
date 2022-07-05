@@ -11,5 +11,5 @@ import (
 
 type ResourceReconciler interface {
 	Reconcile(ctx context.Context, client client.Client, gpuAddon *addonv1alpha1.GPUAddon) ([]metav1.Condition, error)
-	Delete(ctx context.Context, client client.Client) error
+	Delete(ctx context.Context, client client.Client) (bool, error)
 }

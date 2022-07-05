@@ -109,8 +109,9 @@ var _ = Describe("Subscription Resource Reconcile", Ordered, func() {
 				WithRuntimeObjects(s, csv).
 				Build()
 
-			err := rrec.Delete(context.TODO(), c)
+			deleted, err := rrec.Delete(context.TODO(), c)
 			Expect(err).ShouldNot(HaveOccurred())
+			Expect(deleted).To(BeFalse())
 
 			err = c.Get(context.TODO(), types.NamespacedName{
 				Name:      s.Name,
@@ -125,6 +126,10 @@ var _ = Describe("Subscription Resource Reconcile", Ordered, func() {
 			}, csv)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+
+			deleted, err = rrec.Delete(context.TODO(), c)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(deleted).To(BeTrue())
 		})
 	})
 })

@@ -92,7 +92,7 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 		})
 	})
 
-	Context("Delete Reconcile", func() {
+	Context("Delete reconcile", func() {
 		gpuAddon, r := prepareClusterForGPUAddonDeletionTest()
 
 		req := reconcile.Request{
@@ -104,8 +104,9 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 
 		_, err := r.Reconcile(context.TODO(), req)
 
-		It("should not return an error", func() {
-			Expect(err).ShouldNot(HaveOccurred())
+		It("should return an error", func() {
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).Should(ContainSubstring("not all resources have been deleted"))
 		})
 
 		It("should delete the GPUAddon CSV", func() {
@@ -151,6 +152,14 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 			}, nfd)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		Context("a second time", func() {
+			_, err := r.Reconcile(context.TODO(), req)
+
+			It("should not return an error", func() {
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 	})
 })

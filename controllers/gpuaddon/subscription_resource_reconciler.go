@@ -132,7 +132,10 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 	return nil
 }
 
-func (r *SubscriptionResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+func (r *SubscriptionResourceReconciler) Delete(ctx context.Context, c client.Client) (bool, error) {
+	var err error
+	deleted := make([]bool, 2)
+
 	s := &operatorsv1alpha1.Subscription{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: common.GlobalConfig.AddonNamespace,
@@ -140,22 +143,35 @@ func (r *SubscriptionResourceReconciler) Delete(ctx context.Context, c client.Cl
 		},
 	}
 
-	err := c.Delete(ctx, s)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete Subscription %s: %w", s.Name, err)
+	if err = c.Delete(ctx, s); err != nil {
+		if !k8serrors.IsNotFound(err) {
+			return false, fmt.Errorf("failed to delete Subscription %s: %w", s.Name, err)
+		}
+		deleted[0] = true
 	}
 
 	csv, err := common.GetCsvWithPrefix(c, common.GlobalConfig.AddonNamespace, packageName)
 	if err != nil {
-		return err
+		if !k8serrors.IsNotFound(err) {
+			return false, fmt.Errorf("failed to get GPU Operator CSV %s: %w", packageName, err)
+		}
+		return true, nil
 	}
 
-	err = c.Delete(ctx, csv)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete GPU Operator CSV %s: %w", csv.Name, err)
+	if err = c.Delete(ctx, csv); err != nil {
+		if !k8serrors.IsNotFound(err) {
+			return false, fmt.Errorf("failed to delete GPU Operator CSV %s: %w", csv.Name, err)
+		}
+		deleted[1] = true
 	}
 
-	return nil
+	for i := range deleted {
+		if !deleted[i] {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 func (r *SubscriptionResourceReconciler) getDeployedConditionFetchFailed() metav1.Condition {

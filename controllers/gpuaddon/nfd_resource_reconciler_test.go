@@ -91,8 +91,9 @@ var _ = Describe("NFD Resource Reconcile", Ordered, func() {
 				WithRuntimeObjects(nfd).
 				Build()
 
-			err := rrec.Delete(context.TODO(), c)
+			deleted, err := rrec.Delete(context.TODO(), c)
 			Expect(err).ShouldNot(HaveOccurred())
+			Expect(deleted).To(BeFalse())
 
 			err = c.Get(context.TODO(), types.NamespacedName{
 				Name:      nfd.Name,
@@ -100,6 +101,10 @@ var _ = Describe("NFD Resource Reconcile", Ordered, func() {
 			}, nfd)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+
+			deleted, err = rrec.Delete(context.TODO(), c)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(deleted).To(BeTrue())
 		})
 	})
 })
