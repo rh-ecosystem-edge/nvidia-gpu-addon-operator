@@ -88,14 +88,19 @@ var _ = Describe("ClusterPolicy Resource Reconcile", Ordered, func() {
 				WithRuntimeObjects(cp).
 				Build()
 
-			err := rrec.Delete(context.TODO(), c)
+			deleted, err := rrec.Delete(context.TODO(), c)
 			Expect(err).ShouldNot(HaveOccurred())
+			Expect(deleted).To(BeFalse())
 
 			err = c.Get(context.TODO(), client.ObjectKey{
 				Name: cp.Name,
 			}, cp)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+
+			deleted, err = rrec.Delete(context.TODO(), c)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(deleted).To(BeTrue())
 		})
 	})
 })

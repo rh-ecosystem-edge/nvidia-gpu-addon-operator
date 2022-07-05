@@ -179,15 +179,23 @@ func (r *GPUAddonReconciler) registerFinilizerIfNeeded(ctx context.Context, gpuA
 }
 
 func (r *GPUAddonReconciler) removeOwnedResources(ctx context.Context) error {
+	deleted := make([]bool, len(resourceOrderedReconcilers))
+
 	for i := len(resourceOrderedReconcilers) - 1; i >= 0; i-- {
-		err := resourceOrderedReconcilers[i].Delete(ctx, r.Client)
+		removed, err := resourceOrderedReconcilers[i].Delete(ctx, r.Client)
 		if err != nil {
 			return err
 		}
+		deleted[i] = removed
 	}
 
-	err := r.removeSelfCsv(ctx)
-	if err != nil {
+	for i := range deleted {
+		if !deleted[i] {
+			return fmt.Errorf("not all resources have been deleted yet, won't remove add-on CSV")
+		}
+	}
+
+	if err := r.removeSelfCsv(ctx); err != nil {
 		return err
 	}
 

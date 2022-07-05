@@ -143,19 +143,21 @@ func (r *ClusterPolicyResourceReconciler) setDesiredClusterPolicy(
 	return nil
 }
 
-func (r *ClusterPolicyResourceReconciler) Delete(ctx context.Context, c client.Client) error {
+func (r *ClusterPolicyResourceReconciler) Delete(ctx context.Context, c client.Client) (bool, error) {
 	cp := &gpuv1.ClusterPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: common.GlobalConfig.ClusterPolicyName,
 		},
 	}
 
-	err := c.Delete(ctx, cp)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete ClusterPolicy %s: %w", cp.Name, err)
+	if err := c.Delete(ctx, cp); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("failed to delete ClusterPolicy %s: %w", cp.Name, err)
 	}
 
-	return nil
+	return false, nil
 }
 
 func (r *ClusterPolicyResourceReconciler) getDeployedConditionFetchFailed() metav1.Condition {

@@ -78,7 +78,7 @@ func (r *ConsolePluginResourceReconciler) Reconcile(
 	}
 
 	if !gpuAddon.Spec.ConsolePluginEnabled {
-		if err := r.Delete(ctx, client); err != nil {
+		if _, err := r.Delete(ctx, client); err != nil {
 			conditions = append(conditions, r.getDeployedConditionFailed(err))
 			return conditions, err
 		}
@@ -118,23 +118,32 @@ func (r *ConsolePluginResourceReconciler) Reconcile(
 	return conditions, nil
 }
 
-func (r *ConsolePluginResourceReconciler) Delete(ctx context.Context, c client.Client) error {
-	err := r.deleteConsolePluginCR(ctx, c)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
+func (r *ConsolePluginResourceReconciler) Delete(ctx context.Context, c client.Client) (bool, error) {
+	var err error
+	deleted := make([]bool, 3)
+
+	deleted[0], err = r.deleteConsolePluginCR(ctx, c)
+	if err != nil {
+		return false, err
 	}
 
-	err = r.deleteConsolePluginService(ctx, c)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
+	deleted[1], err = r.deleteConsolePluginService(ctx, c)
+	if err != nil {
+		return false, err
 	}
 
-	err = r.deleteConsolePluginDeployment(ctx, c)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
+	deleted[2], err = r.deleteConsolePluginDeployment(ctx, c)
+	if err != nil {
+		return false, err
 	}
 
-	return nil
+	for i := range deleted {
+		if !deleted[i] {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 func (r *ConsolePluginResourceReconciler) reconcileConsolePluginCR(
@@ -466,22 +475,24 @@ func (r *ConsolePluginResourceReconciler) setDesiredConsolePluginService(
 	return nil
 }
 
-func (r *ConsolePluginResourceReconciler) deleteConsolePluginCR(ctx context.Context, c client.Client) error {
+func (r *ConsolePluginResourceReconciler) deleteConsolePluginCR(ctx context.Context, c client.Client) (bool, error) {
 	cp := &consolev1alpha1.ConsolePlugin{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: consolePluginName,
 		},
 	}
 
-	err := c.Delete(ctx, cp)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete ConsolePlugin CR %s: %w", cp.Name, err)
+	if err := c.Delete(ctx, cp); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("failed to delete ConsolePlugin CR %s: %w", cp.Name, err)
 	}
 
-	return nil
+	return false, nil
 }
 
-func (r *ConsolePluginResourceReconciler) deleteConsolePluginDeployment(ctx context.Context, c client.Client) error {
+func (r *ConsolePluginResourceReconciler) deleteConsolePluginDeployment(ctx context.Context, c client.Client) (bool, error) {
 	dp := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: common.GlobalConfig.AddonNamespace,
@@ -489,15 +500,17 @@ func (r *ConsolePluginResourceReconciler) deleteConsolePluginDeployment(ctx cont
 		},
 	}
 
-	err := c.Delete(ctx, dp)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete ConsolePlugin Deployment %s: %w", dp.Name, err)
+	if err := c.Delete(ctx, dp); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("failed to delete ConsolePlugin Deployment %s: %w", dp.Name, err)
 	}
 
-	return nil
+	return false, nil
 }
 
-func (r *ConsolePluginResourceReconciler) deleteConsolePluginService(ctx context.Context, c client.Client) error {
+func (r *ConsolePluginResourceReconciler) deleteConsolePluginService(ctx context.Context, c client.Client) (bool, error) {
 	s := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: common.GlobalConfig.AddonNamespace,
@@ -505,12 +518,14 @@ func (r *ConsolePluginResourceReconciler) deleteConsolePluginService(ctx context
 		},
 	}
 
-	err := c.Delete(ctx, s)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete ConsolePlugin Service %s: %w", s.Name, err)
+	if err := c.Delete(ctx, s); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("failed to delete ConsolePlugin Service %s: %w", s.Name, err)
 	}
 
-	return nil
+	return false, nil
 }
 
 func (r *ConsolePluginResourceReconciler) getDeployedConditionFailed(err error) metav1.Condition {
