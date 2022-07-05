@@ -403,11 +403,7 @@ func (r *ConsolePluginResourceReconciler) setDesiredConsolePluginDeployment(
 		DNSPolicy:     corev1.DNSClusterFirst,
 	}
 
-	if err := ctrl.SetControllerReference(gpuAddon, dp, client.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(gpuAddon, dp, client.Scheme())
 }
 
 func (r *ConsolePluginResourceReconciler) setDesiredConsolePlugin(
@@ -459,11 +455,7 @@ func (r *ConsolePluginResourceReconciler) setDesiredConsolePluginService(
 		Type: corev1.ServiceTypeClusterIP,
 	}
 
-	if err := ctrl.SetControllerReference(gpuAddon, s, client.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(gpuAddon, s, client.Scheme())
 }
 
 func (r *ConsolePluginResourceReconciler) deleteConsolePluginCR(ctx context.Context, c client.Client) error {

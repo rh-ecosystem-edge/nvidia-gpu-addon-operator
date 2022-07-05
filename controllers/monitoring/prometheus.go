@@ -183,11 +183,7 @@ func (r *MonitoringReconciler) setDesiredPrometheus(
 	// 	Key: alertRelabelConfigSecretKey,
 	// }
 
-	if err := ctrl.SetControllerReference(m, prometheus, c.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(m, prometheus, c.Scheme())
 }
 
 func (r *MonitoringReconciler) deletePrometheus(
@@ -290,11 +286,7 @@ func (r *MonitoringReconciler) setDesiredPrometheusKubeRBACProxyConfigMap(
 		})(),
 	}
 
-	if err := ctrl.SetControllerReference(m, cm, c.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(m, cm, c.Scheme())
 }
 
 func (r *MonitoringReconciler) deletePrometheusKubeRBACProxyConfigMap(
@@ -392,11 +384,7 @@ func (r *MonitoringReconciler) setDesiredPrometheusService(
 	annotations["service.beta.openshift.io/serving-cert-secret-name"] = prometheusServingCertSecretName
 	annotations["service.alpha.openshift.io/serving-cert-secret-name"] = prometheusServingCertSecretName
 
-	if err := ctrl.SetControllerReference(m, s, c.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(m, s, c.Scheme())
 }
 
 func (r *MonitoringReconciler) deletePrometheusService(

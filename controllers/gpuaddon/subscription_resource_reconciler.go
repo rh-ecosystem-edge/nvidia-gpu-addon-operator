@@ -125,11 +125,7 @@ func (r *SubscriptionResourceReconciler) setDesiredSubscription(
 		InstallPlanApproval:    operatorsv1alpha1.ApprovalAutomatic,
 	}
 
-	if err := ctrl.SetControllerReference(gpuAddon, s, client.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(gpuAddon, s, client.Scheme())
 }
 
 func (r *SubscriptionResourceReconciler) Delete(ctx context.Context, c client.Client) error {

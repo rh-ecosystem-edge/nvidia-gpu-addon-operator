@@ -123,11 +123,7 @@ func (r *MonitoringReconciler) setDesiredAlertManager(
 		},
 	}
 
-	if err := ctrl.SetControllerReference(m, alertManager, c.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(m, alertManager, c.Scheme())
 }
 
 func (r *MonitoringReconciler) deleteAlertManager(
@@ -280,11 +276,7 @@ func (r *MonitoringReconciler) setDesiredAlertManagerConfig(
 		},
 	}
 
-	if err := ctrl.SetControllerReference(m, alertManagerConfig, c.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(m, alertManagerConfig, c.Scheme())
 }
 
 func (r *MonitoringReconciler) deleteAlertManagerConfig(
