@@ -11,24 +11,23 @@ import (
 	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/scheme"
-	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
-	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
+	"github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/internal/common"
 )
 
 var _ = Describe("GPUAddon Reconcile", Ordered, func() {
@@ -61,7 +60,7 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 
 		// Check finilizer
 		It("Should add finilizers", func() {
-			Expect(common.SliceContainsString(g.ObjectMeta.Finalizers, common.GlobalConfig.AddonID)).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(g, common.GlobalConfig.AddonID)).To(BeTrue())
 		})
 		Context("NFD related tests", func() {
 			It("Should Have created an NFD CR and mark as owner", func() {
@@ -93,7 +92,7 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 		})
 	})
 
-	Context("Delete Reconcile", func() {
+	Context("Delete reconcile", func() {
 		gpuAddon, r := prepareClusterForGPUAddonDeletionTest()
 
 		req := reconcile.Request{
@@ -105,8 +104,9 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 
 		_, err := r.Reconcile(context.TODO(), req)
 
-		It("should not return an error", func() {
-			Expect(err).ShouldNot(HaveOccurred())
+		It("should return an error", func() {
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).Should(ContainSubstring("not all resources have been deleted"))
 		})
 
 		It("should delete the GPUAddon CSV", func() {
@@ -152,6 +152,14 @@ var _ = Describe("GPUAddon Reconcile", Ordered, func() {
 			}, nfd)
 			Expect(err).Should(HaveOccurred())
 			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		Context("a second time", func() {
+			_, err := r.Reconcile(context.TODO(), req)
+
+			It("should not return an error", func() {
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 	})
 })

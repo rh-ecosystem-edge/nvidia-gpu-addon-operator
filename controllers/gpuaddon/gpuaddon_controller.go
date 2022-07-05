@@ -33,6 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	addonv1alpha1 "github.com/rh-ecosystem-edge/nvidia-gpu-addon-operator/api/v1alpha1"
@@ -81,7 +82,7 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	logger.Info("GPUAddon Reconcile start")
 	gpuAddon := addonv1alpha1.GPUAddon{}
 
-	if err := r.Client.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &gpuAddon); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &gpuAddon); err != nil {
 		if k8serrors.IsNotFound(err) {
 			logger.Info("GPUAddon config not found. Probably deleted")
 			return ctrl.Result{}, nil
@@ -89,27 +90,25 @@ func (r *GPUAddonReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	if !gpuAddon.ObjectMeta.DeletionTimestamp.IsZero() {
-		// Marked for deletion.
 		logger.Info(fmt.Sprintf("GPUAddon CR %v/%v marked for deletion", req.Namespace, req.Name))
-		if common.SliceContainsString(gpuAddon.ObjectMeta.Finalizers, common.GlobalConfig.AddonID) {
+		if controllerutil.ContainsFinalizer(&gpuAddon, common.GlobalConfig.AddonID) {
 
 			err := r.removeOwnedResources(ctx)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 
-			gpuAddon.Finalizers = common.SliceRemoveString(gpuAddon.Finalizers, common.GlobalConfig.AddonID)
+			controllerutil.RemoveFinalizer(&gpuAddon, common.GlobalConfig.AddonID)
 
-			if err := r.Client.Update(ctx, &gpuAddon); err != nil {
-				return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", r.Client.Update(ctx, &gpuAddon))
+			if err := r.Update(ctx, &gpuAddon); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
 			}
 		}
 		return ctrl.Result{}, nil
 	}
 	addonConditions := []metav1.Condition{}
 
-	// Register finilizer
-	if err := r.registerFinilizerIfNeeded(ctx, gpuAddon); err != nil {
+	if err := r.registerFinilizerIfNeeded(ctx, &gpuAddon); err != nil {
 		return ctrl.Result{}, r.patchStatus(ctx, gpuAddon, addonConditions, err)
 	}
 
@@ -165,26 +164,38 @@ func (r *GPUAddonReconciler) patchStatus(ctx context.Context, gpuAddon addonv1al
 	return err
 }
 
-func (r *GPUAddonReconciler) registerFinilizerIfNeeded(ctx context.Context, gpuAddon addonv1alpha1.GPUAddon) error {
-	if !common.SliceContainsString(gpuAddon.ObjectMeta.Finalizers, common.GlobalConfig.AddonID) {
-		gpuAddon.ObjectMeta.Finalizers = append(gpuAddon.ObjectMeta.Finalizers, common.GlobalConfig.AddonID)
-		if err := r.Update(ctx, &gpuAddon); err != nil {
-			return fmt.Errorf("failed to add finalizer: %w", err)
-		}
+func (r *GPUAddonReconciler) registerFinilizerIfNeeded(ctx context.Context, gpuAddon *addonv1alpha1.GPUAddon) error {
+	if controllerutil.ContainsFinalizer(gpuAddon, common.GlobalConfig.AddonID) {
+		return nil
 	}
+
+	controllerutil.AddFinalizer(gpuAddon, common.GlobalConfig.AddonID)
+
+	if err := r.Update(ctx, gpuAddon); err != nil {
+		return fmt.Errorf("failed to add finalizer: %w", err)
+	}
+
 	return nil
 }
 
 func (r *GPUAddonReconciler) removeOwnedResources(ctx context.Context) error {
+	deleted := make([]bool, len(resourceOrderedReconcilers))
+
 	for i := len(resourceOrderedReconcilers) - 1; i >= 0; i-- {
-		err := resourceOrderedReconcilers[i].Delete(ctx, r.Client)
+		removed, err := resourceOrderedReconcilers[i].Delete(ctx, r.Client)
 		if err != nil {
 			return err
 		}
+		deleted[i] = removed
 	}
 
-	err := r.removeSelfCsv(ctx)
-	if err != nil {
+	for i := range deleted {
+		if !deleted[i] {
+			return fmt.Errorf("not all resources have been deleted yet, won't remove add-on CSV")
+		}
+	}
+
+	if err := r.removeSelfCsv(ctx); err != nil {
 		return err
 	}
 
