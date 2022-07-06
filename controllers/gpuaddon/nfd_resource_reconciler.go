@@ -97,11 +97,7 @@ func (r *NFDResourceReconciler) setDesiredNFD(
 		ConfigData: workerConfig,
 	}
 
-	if err := ctrl.SetControllerReference(gpuAddon, nfd, client.Scheme()); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.SetControllerReference(gpuAddon, nfd, client.Scheme())
 }
 
 func (r *NFDResourceReconciler) Delete(ctx context.Context, c client.Client) (bool, error) {
