@@ -32,9 +32,6 @@ type config struct {
 	// ADDON_ID
 	AddonID string `envconfig:"ADDON_ID" default:"nvidia-gpu-addon"`
 
-	// ADDON_LABEL
-	AddonLabel string `envconfig:"ADDON_LABEL" default:"api.openshift.com/addon-nvidia-gpu-addon"`
-
 	// CLUSTER_POLICY_NAME
 	ClusterPolicyName string `envconfig:"CLUSTER_POLICY_NAME" default:"ocp-gpu-addon"`
 
