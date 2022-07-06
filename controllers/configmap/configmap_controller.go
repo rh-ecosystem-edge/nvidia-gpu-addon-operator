@@ -88,13 +88,13 @@ func (r *ConfigMapReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func configMapFilter() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			return false
+			return isAddonConfigMap(e.ObjectNew)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
-			return false
+			return isAddonConfigMap(e.Object)
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isAddonConfigMap(e.Object)
+			return false
 		},
 	}
 }
