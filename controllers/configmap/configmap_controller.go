@@ -19,12 +19,10 @@ package configmap
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -47,41 +45,12 @@ type ConfigMapReconciler struct {
 
 func (r *ConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	configmap := v1.ConfigMap{}
 
-	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: req.Name}, &configmap); err != nil {
-		if k8serrors.IsNotFound(err) {
-			logger.Info("ConfigMap not found. Probably deleted")
-			return ctrl.Result{}, nil
-		}
-
-		return ctrl.Result{Requeue: true}, fmt.Errorf("Unable to get ConfigMap: %v", err)
+	if err := r.deleteGpuAddonCr(ctx, req.Namespace); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to delete GPUAddon CR: %w", err)
 	}
 
-	labels := configmap.Labels
-	if labels == nil {
-		logger.Info("No labels attached to ConfigMap. Ignoring")
-		return ctrl.Result{}, nil
-	}
-
-	if val, ok := labels[getAddonDeleteLabel()]; ok {
-		toBeDeleted, err := strconv.ParseBool(val)
-		if err != nil {
-			logger.Error(err, "Invalid value in ConfigMap add-on delete label")
-			return ctrl.Result{}, nil
-		}
-
-		if toBeDeleted {
-			if err := r.deleteGpuAddonCr(ctx, req.Namespace); err != nil {
-				return ctrl.Result{}, fmt.Errorf("failed to delete GPUAddon CR: %w", err)
-			}
-
-			logger.Info("Successfully deleted GPUAddon CR")
-			return ctrl.Result{}, nil
-		}
-	}
-
-	logger.Info("Nothing left to do.")
+	logger.Info("Successfully deleted GPUAddon CR")
 	return ctrl.Result{}, nil
 }
 
@@ -119,10 +88,10 @@ func (r *ConfigMapReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func configMapFilter() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			return isAddonConfigMap(e.ObjectNew)
+			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
-			return isAddonConfigMap(e.Object)
+			return false
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return isAddonConfigMap(e.Object)
@@ -132,8 +101,4 @@ func configMapFilter() predicate.Predicate {
 
 func isAddonConfigMap(object client.Object) bool {
 	return object.GetName() == common.GlobalConfig.AddonID && object.GetNamespace() == common.GlobalConfig.AddonNamespace
-}
-
-func getAddonDeleteLabel() string {
-	return fmt.Sprintf("%v-delete", common.GlobalConfig.AddonLabel)
 }
