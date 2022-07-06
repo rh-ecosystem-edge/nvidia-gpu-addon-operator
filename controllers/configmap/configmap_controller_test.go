@@ -50,12 +50,6 @@ var _ = Describe("ConfigMapReconciler", func() {
 		g := &addonv1alpha1.GPUAddon{}
 
 		Context("with a valid configmap label", func() {
-			BeforeEach(func() {
-				configmap.Labels = map[string]string{
-					getAddonDeleteLabel(): "true",
-				}
-			})
-
 			It("should delete the GPUAddon CR", func() {
 				r := newTestConfigReconciler(configmap, gpuaddon)
 
@@ -65,24 +59,6 @@ var _ = Describe("ConfigMapReconciler", func() {
 				err = r.Get(context.TODO(), types.NamespacedName{Name: gpuaddon.Name, Namespace: gpuaddon.Namespace}, g)
 				Expect(err).Should(HaveOccurred())
 				Expect(k8serrors.IsNotFound(err)).To(BeTrue())
-			})
-		})
-
-		Context("with an invalid configmap label", func() {
-			BeforeEach(func() {
-				configmap.Labels = map[string]string{
-					getAddonDeleteLabel(): "invalidBool",
-				}
-			})
-
-			It("should not do anything", func() {
-				r := newTestConfigReconciler(configmap, gpuaddon)
-
-				_, err := r.Reconcile(context.TODO(), req)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				err = r.Client.Get(context.TODO(), types.NamespacedName{Name: gpuaddon.Name, Namespace: gpuaddon.Namespace}, g)
-				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})
 	})
