@@ -45,7 +45,7 @@ var _ = Describe("Jumpstart GPUAddon", func() {
 			Namespace: common.GlobalConfig.AddonNamespace,
 			Name:      common.GlobalConfig.AddonID,
 		}, g)).ShouldNot(HaveOccurred())
-		versionLabel := fmt.Sprintf("%v-version", common.GlobalConfig.AddonLabel)
+		versionLabel := fmt.Sprintf("%v-version", common.GlobalConfig.AddonID)
 		Expect(g.ObjectMeta.Labels[versionLabel]).To(Equal(version.Version()))
 	})
 })

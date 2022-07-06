@@ -238,7 +238,7 @@ func jumpstartAddon(client client.Client) error {
 	}
 
 	result, err := controllerutil.CreateOrPatch(context.TODO(), client, gpuAddon, func() error {
-		versionLabel := fmt.Sprintf("%v-version", common.GlobalConfig.AddonLabel)
+		versionLabel := fmt.Sprintf("%v-version", common.GlobalConfig.AddonID)
 		gpuAddon.ObjectMeta.Labels = map[string]string{
 			versionLabel: version.Version(),
 		}
